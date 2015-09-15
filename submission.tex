@@ -3,9 +3,7 @@
 % *** GRAPHICS RELATED PACKAGES ***
 %
 \ifCLASSINFOpdf
-  
 \else
-
 
 \fi
 
@@ -28,14 +26,14 @@
 %
 % paper title
 % can use linebreaks \\ within to get better formatting as desired
-%\title{Network contention aware batch Scheduling on Torus-Connected Systems}
-\title{ \textcolor{red}{Deja Vu: A New Topology-aware HPC Batch Scheduler with Workload Precognition} }
+\title{Intelligent HPC Job Scheduling with Communication Pattern Awareness}
 % author names and affiliations
 % use a multiple column layout for up to three different
 % affiliations
 \author{
 
 \IEEEauthorblockN{Xu Yang\IEEEauthorrefmark{1}, John Jenkins\IEEEauthorrefmark{2}, Misbah Mubarak\IEEEauthorrefmark{2}, Robert B. Ross\IEEEauthorrefmark{2}, Zhiling Lan\IEEEauthorrefmark{1}}
+
 \IEEEauthorblockA{\IEEEauthorrefmark{1}Department of Computer Science,
 Illinois Institute of Technology,
 Chicago, Illinois, USA 60616\\
@@ -46,369 +44,210 @@ Argonne, IL, USA 60439\\
 \{jenkins,rross\}@mcs.anl.gov, mmubarak@anl.gov}
 }
 
-
-
-
-
 % make the title area
 \maketitle
 
-
 \begin{abstract} 
-  
-It has been widely recoginzed that network contension between concurrently running jobs in HPC system is one of the primary causes of performance variability. Optimizing job allocation and avoiding network sharing have been proved to be effective for alleviating network contension. In this work, we propose a new job scheduler framework for HPC system, which not only take job's size and expected runtime as primary submission parameters, but also an extra one that indicate job's dominate communication pattern(CP). Using this extra parameter CP can help our new scheduler framework enhance both job and system's performance in three ways. First, communication pattern indicates whether the job's performance rely heavily on the network or not. Second, with the precongnition of job's dominate communication pattern, the scheduler can provide job with better resource allocation. Third, when multiple jobs are dispatched to the system, knowing their communication pattern can help avoid network contension. Our extensive experimental results show that the new scheduling framework can greatly improve both system and user's job performance.
+
+It has been widely recoginzed that network contension between concurrently running jobs in HPC system is one of the primary causes of performance variability. Optimizing job allocation and avoiding network sharing have been proved to be effective for alleviating network contension and performance degradation. In this work, we propose a new job communication pattern aware allocation strategy which serve as a critical module in our future HPC batch scheduler. The novelty of our new strategy is that it makes allocation decision with not only system topology and resource availability information, but also with job's communication pattern information. The information scheduler gets about job communication pattern can help it to decide whether the job’s performance relies heavily on the network or not, and what the potential inter/intra-job interference would be. Thus, the scheduler can pick the preferable resource allocation based on specific job's communication pattern and preserve the locality of allocation in a better way. Using traces collected from three typical parallel applications of DOE, we validate the effectiveness of our new desgin. The idea presented in this paper is widely applicable: HPC parallel application has specific dominant communication pattern, allocating resource with communication pattern awareness can preserve locality in a bettwer way on systems with differnt network topologies.
 
 \end{abstract}
 
 \IEEEpeerreviewmaketitle
 
 
-
-
 \section{Introduction} 
-\label{sec: intro} 
+\label{sec: intro}
 
-
-The batch scheduler has always been a undervalued component in HPC system. As an interface between user and system, the batch scheduler usually do nothing more than simply take the submitted job from user and hand over to the system for execution. User are required to provide information about system resource needed by his job, such as job size (i.e. how many nodes are needed to run the job) and job's expected runtime (i.e. how long does user expected his job take to complete) upon job's submission. The batch scheduler keeps updated about system resource availability, when it being informed there are enough number of nodes becomes available, the scheduler picks up a job from the job queue and dispatch it to the system.
-
-Most existing batch schedulers take so few initiative  because it been hold under the obscurantism policy. There are two observations about the ignored information that batch scheduler should have been informed. First, the workload on HPC system tend to be repetitive. We analyzed the workload on Mira, an IBM Blue/Gene Q system installed in Argonne National Lab, found that most jobs require 2k nodes and about 14 particular jobs consist of the majority its workload. In other word, Mira accommodates mostly some particular 14 jobs and most jobs have the same size. The second thing that batch scheduler should know is job's communication pattern. When a user submit his job, he at least has a vague idea about the most dominant communication pattern of his job (i.e. All-to-All, Nearest Neighbor, Collective).
-
-In this work, we propose a new HPC batch scheduler framework, which can capture the workload signature introduced by repetitively submitted jobs and  integrates network simulation feedback control. In spite of the input parameters such as job size and expected runtime that traditional batch scheduler requires, our new framework also takes job's communication pattern (CP) as an extra parameter, which can be utilized when assigning job with its preferred allocation. Being aware of job's CP has several adavantages for improving both job and system performance. For example, CP indicates the better allocation for the job and thus, bath scheduler can get the job prefered allocation without embezzling extra system resources. 
-
-Unlike the traditional batch scheduler that is agnostic about upcoming jobs in the workload, our new framework is aware of the repetitiveness of HPC workload and take advantage of this workload feature for making the optimal scheduling/allocation decision for upcoming jobs. To endow the new framework with this ability, we implement a memory mechanism that keep record of the preference about allocation of jobs with different CPs.
-
-To receive the feedback about resource availability from system, the new framework will keep real time records about the both network and node availability. The new framework will be informed with information such as how many nodes are available, layout and geometry of those available nodes  (contiguous or non-contiguous, ), and their network resources (connnected by torus or mesh). Our new framework will also collect certain information for each job when the job running on some its allocated resources, such as job's actual running time, network resource utilization, to determine whether its allocated resources is the optimal regarding to its communication pattern. These feedback information from the runtime system will be utilized for job's furture repetitive submission.
-
-With more detailed information (i.e. job size, expected runtime, CP) about job provided by user, combined with feedback about job's previous execution and resource availability from system, the new scheduler framework can make better scheduling/allocation decisions. And with the new memory mechanism, our new framework is equiped with self-learning capability and the more jobs it handled, the more talented it becomes.
-
-
-The major contributions of this paper:
-\begin{itemize}
-    \item We analyze the repetitiveness as one of signatures for the workload trace collected from Mira, an IBM Blue Gene/Q system at Argonne National Lab.
-    
-    \item We analyze the behavior of four most prevalent communication patterns among HPC jobs, under the circumstance of different allocation.
-
-    \item We are the first to propose that HPC batch scheduler should take job's communication pattern (CP) as extra input, which brings benefit for both job and system.
-    
-    \item Our new scheduling framework establish a feedback control link between system and job scheduling module. (simple feedback control) 
-    
-\end{itemize}
-
-
-
-
-
-\section{System Observations}
-\label{sec: observation}
-
-Our work is based on two major observations about HPC system. First, the job submissions on HPC tend to be repetitive. The same application could be submitted to HPC system repetitively with different different input data or configuration. Second, most applications running on HPC system are highly communication intensive, and each application has different dominant communication patterns during its different execution phases. In this section, we will describe this the repetitiveness of job submission and applications' communication patterns.
-
-\subsection{Repetitive Job Submission}
-\label{sec: repetitive job submission}
-
-The same application could run repetitively on HPC system. This is due to users from some scientific areas have to run the same application multiple times with different configurations. For example, some bioinformatics applications need to conduct the same computation i.e. protein sequence alignment, for a large sets of protein sequences. From system's perspective, all these submissions are the same (same computation instructions and communication phases). Therefore, we can observe the same job multiple times with slightly different input parameter, and all these jobs usually belong to the same user. To substantiate our claim, we analyze the workload trace in 2014 from Mira, an IBM Blue/Gene Q system. As it shown in figure \ref{fig: repetitiveness of Mira},  we list the number of total submissions from five most active users and the percentage of the repetitive ones.
-
+The scale of supercomputer keeps growing from petascale to exascale, to accomodate the the demand of insatiable computing power from scientific research areas. Production systems contain hundreds of thousands of processors serve as irreplaceable research vehicle for scientific problems with increasing size and complexity. Supercomputers employed in a shared way to accomodate many jobs running concurrently\ref{fig: mira activity} , which will also improve system utilization. These jobs share the system infrastructure such as network, I/O bandwidth, which will inevitably cause contention over the shared resource. As supercomputer continues to evolve, these shared resources are tend to become the bottleneck for performance.
 
 \begin{figure}[h!] 
   \centering
-  \includegraphics[width=0.38\textwidth]{Pic/JobInfo/repe-mira-2}
-   \caption{ The repetitive job submissions on Mira in 2014. The percentage of repetitive submissions from certain user can be as much as 90\%. }
-   \label{fig: repetitiveness of Mira}
+  \includegraphics[width=0.38\textwidth]{figs/mira}
+   \caption{The activity of Mira, IBM BlueGene/Q system at Argonne National Lab. Many jobs runninng concurrently on the system. Different jobs represented by specific colors. }
+   \label{fig: mira activity}
+\end{figure}
+
+One of the most prominant problem comes into researcher's attention is the network contention between concurrently running jobs. The network sharing between concurrently running jobs cause communication variability, which reslut in jobs running slower and longer waiting time for results. The delay of currently running jobs will increase the queueing time of the following submitted jobs, thus leads to low system throughput, low utilization and high energy cost. The network sharing can even cause interference between neighbouring jobs, abort the the running job unexpectedly, or even worse, wrong science results. 
+
+
+This adverse effect of network sharing can be mitigated by providing the job with better node allocation. The batch scheduler is responsible for assigning job with the amount of node it required upon submission. Currently two scheduling strategies are commonly used on torus-connected systems. One is so called partition based systems, where the scheduler assigns each user job a compact and contiguous set of computing nodes. IBM Blue Gene series systems fall into this category. This strategy is in favor of application’s performance by providing it with isolated partition and exclusive network connections, thus reducing network contention caused by concurrently running jobs sharing network bandwidth. However, this strategy can cause internal fragmentation (when more nodes are allocated to a job than it requests) and external fragmentation(when sufficient nodes are available for a request, but they can not be allocated contiguously), therefore leading to poor system performance (e.g., low system utilization and long waiting time for job). The other is non-contiguous allocation system, where free nodes are assigned to user job no matter whether they are contiguous or not. Cray XT/XE series systems fall into this category. Non-contiguous allocation eliminates internal and external fragmentation as seen in partition-based systems, thereby leading to high system utilization. Nevertheless, it introduces other problems such as scattering application processes all over the system and causing both inter-job contention and intra-job contention. The non-contiguous node allocation can make inter-process communication less efficient and cause network contention among concurrently running jobs, thereby resulting in poor job performance especially for those communication-intensive jobs.
+
+
+Partition-based allocation achieves good job performance by sacrificing system performance (e.g., poor system utiliza- tion), whereas non-contiguous allocation can result in better system performance but could severely degrade performance of user jobs (e.g, prolonged wait-time and run-time). Supercomputers keep growing in size, its network become more sophisticated then ever before and applications also increase its complexity. How to provide application with better allocation that can balance job performance with system performance become a prominant problem need a solution before HPC enters era of exasacle computing. In this work, we propose a guideline for future batch scheduling system, a smart way to make allocation with the awareness of job's communication pattern.
+
+Most existing batch schedulers take so few initiative because it been hold under the obscurantism policy. Whether it use partition-based or non-contigous policy, means it chooses the benefit of either system or job over the other. Some propose compromised policies like buddy system\cite{buddy system paper} still make the allocation for job blindly without knowing job's communication information. 
+
+Although HPC applications complexity continue to grow, people could get more knowledge about the applications communication information with the help from various parallel application profiling tools, such as TAU\cite{tau}, MPIP\cite{mpip} and DUMPI\cite{sst}. Job's communication trace and performance analysis can be get by using such tool at runtime. 
+
+The off-line study of job's communication traces could be helpful to develop better allocation policies for batch scheduler to make on-line scheduling/allocating decisions. This is because the communication pattern of parallel applications on HPC system can be summarized into a couple of categories\cite{hpdc2015-ornl}. The deep understanding of one application can be helpful to all other applications that conforms to the same communication pattern. Job's communication traces study would be extreme helpful to leadership computing facility too. The set of applications running on those leadership computing facilities is usually stable, and the workloads from those HPC systems is usually has great repetitiveness. We analyzed the workload on Mira, an IBM Blue/Gene Q system at Argonne Leadership Computing Facility, found that most jobs require 2k nodes and about 14 particular jobs consist of the majority its workload\ref{fig: repetitiveness of Mira}. In other word, Mira accommodates mostly some particular 14 jobs and most jobs have the same size.
+
+
+In this work, we present a guideline for future batch scheduler to make allocation with awareness about job's communication pattern. Rather than choose blindly between partition-base or non-contigous allocation, the new allocation mechanism make allocation based on job's communication pattern. With detail analysis about application's communication pattern, we can get a clear view of its communication topology graph, data transfer between processes, and decide which processes are tightly connected to which and conduct intensive communication. The "local community" consists of such tightly coupled processes shuld get compact alloction. Then, the allocation mechanism should make allocations that only needs to guarantee the locality of the subset of the nodes where those "local community" should reside on.
+
+We first pick three signature applications from DOE Design Forward Project\cite{design forward webpage} as examples to conduct deep study about their communication patterns. We identify the "local community" in these applications and assign them allocation accrodingly. The advantage of making allocation is obvious. First, compared with partition-based policy, our communication pattern aware policy is more flexible, it doesn't require the system to provide a big partition that can accomodate the whole application, just small set of compact nodes enough for all the "local community" in the application. On the other hand, our communication pattern aware allocation policy won't destroy the locality of application's communication pattern. On the contrary, it provides small compact node sest for the the "local communities" in the application will preserve the communication locality in the maximum extent.
+
+We use a sophisticated simulation toolkit named CODES, Co-Design of Multi-layer Exascale Storage Architecture, from Argonne National Lab as research vehicle to evaluate the performance of our communication pattern aware allocation policy on torus network. CODES enables the exploration of simulating different HPC networks with high fidelity\cite{Jason-2011}. We extend CODES with a Job Mapping API that support different allocation policies on torus network.
+
+We also conduct a case study with the results we got from communication pattern aware allocation policy evaluation with real trace from production system.\textcolor{red}{Not Sure About this part!!!}
+
+The rest of this paper orgainzed as follows. Section\ref{sec:application study} gives a detailed study of the three applications from DOE Desgin Forward Project. Section\ref{sec:simulation} talks about the simulation platform and Section
+
+
+
+
+\section{Application Study}
+\label{sec:application study}
+
+A parallel application usuall conforms to a combination of several basic communication patterns. At its different execution phases, the application's communication behavior may follow different basic patterns repectively. When we look into the data flow during the application execution, most parallel application start with broadcast operation to distribute the data from root process to other processes, followed by a series of computation and communication that comforms to certain pattern, which is usually the dominant part of application's execution. And before the application come to completion, all the working process will return their results to the root dirctly or hierarchically. In this work, we focus on the dominant communication pattern because that's where the application spend most of its running time. We believe making optimized allocation regarding application's dominant communication pattern would greatly benefit both the application and the system. In this section, we analysis two applications whose dominant communication patterns are most prevalent in scientific computation.
+
+There are many profiling tools available to capture the communication behavior from parallel applications, such as Tuning and Analysis Utilities(TAU)\cite{tau}, mpiP\cite{mpip}. They can help analysis parallel application, providing information like the percentage of different MPI operations of the applications, communication topology, the amount data transferred between processes.
+
+In this work, we provide detailed analysis about the communication pattern of two DOE MiniApps. MiniApps are reduced proxy applications that encapsulate the salient performance of larger full size applications\cite{miniapp}. Since we only focus on the dominant communication pattern of parallel applications, these MiniApps are perfect candidates for analysis the application's performance on different allocations or on new network architectures.
+
+
+\subsection{AMG}
+\label{sec:amg}
+AMG is the MiniApp of Algebraic Multigrid Solver, which is a parallel algebraic multigrid solver for linear systems arising from problems on unstructured mesh physics packages. It has been derived directly from the BoomerAMG solver that is being developed in the Center for Applied Scientific Computing (CASC) at LLNL\cite{amg}. The dominant communication pattern is this regional communication with decreasing message size for different parts of the multigrid v-cycle.
+
+\begin{figure}[h!] 
+  \centering
+  \includegraphics[width=0.38\textwidth]{figs/amg/amg_ct}
+   \caption{Communication Topology of AMG with 27 MPI Ranks }
+   \label{fig: amg communication topology}
+\end{figure}
+
+\begin{figure}[h!] 
+  \centering
+  \includegraphics[width=0.38\textwidth]{figs/amg/amg_data_transfer}
+   \caption{The amount of data each rank transferred in AMG. }
+   \label{fig: amg data trans}
+\end{figure}
+
+Figure \ref{fig: amg communication topology} shows the communication topology of a small scale AMG with 27 MPI Ranks. Here we prefer to show the communication topology with small scale version of the MiniApp because the dominant communication pattern of the application doesn't change with its scale. We can make the observation from the upper-left of the figure that each rank in AMG has intense communication between 3 other ranks, such as rank 0 between rank 1, 3 and 9, rank 1 between 2, 4 and 10, etc. And this relation is also symmetric along the main diagnal. The dominant communication pattern is quite obvious when we identify this relation between ranks.
+
+Figure \ref{fig: amg data trans} shows the amount of data each rank transferred in AMG. The blue line shows that total data amount transferred from each rank, while the red shows the amount of received data and green shows the amount of send data. The first thing we can spot from the figure is that for each rank, the amount of data sent and received are basically the same, which also well explain the symmetry of the application's dominant communication pattern. And the second thing we can find about AMG is that the data transfer amount also has a symmetric pattern. Rank 0 has the same amout of data transfer as Rank 26, Rank 1 as of Rank 25, etc.
+
+
+\subsection{Crystal Router}
+\label{sec:crystalrouter}
+
+The second MiniApp we have is Crystal Router, which is the extracted communication kernel of the full application Nek5000. Nek5000\cite{crystalrouter} is a spectral element CFD application developed at Argonne National Laboratory. It features spectral element multigrid solvers coupled with a highly scalable, parallel coarse-grid solver that widely used for projects including ocean current modeling, thermal hydraulics of reactor cores, and spatiotemporal chaos. The MiniApp of Nek5000, Crystal Router demonstrates the "many-to-many" communication pattern through scalable multi-stage communication process.
+
+\begin{figure}[h!] 
+  \centering
+  \includegraphics[width=0.38\textwidth]{figs/cr/cr10_ct}
+   \caption{Communication Topology of Crystal Router with 10 MPI Ranks }
+   \label{fig: crystalrouter10 communication topology}
+\end{figure}
+
+\begin{figure}[h!] 
+  \centering
+  \includegraphics[width=0.38\textwidth]{figs/cr/cr100_ct}
+   \caption{Communication Topology of Crystal Router with 100 MPI Ranks }
+   \label{fig: crystalrouter100 communication topology}
+\end{figure}
+
+\begin{figure}[h!] 
+  \centering
+  \includegraphics[width=0.38\textwidth]{figs/cr/cr_data_transfer}
+   \caption{The amount of data each rank transferred in Crystal Router. }
+   \label{fig: cr data trans}
+\end{figure}
+
+Here, we provide the communication topology graph of Crystal Router with 10-rank and 100-rank respectively. As we can see from figure \ref{fig: crystalrouter10 communication topology}, every 5-rank is a compact community, where data transfer is very intensive. Beside the "5-rank community", there is "pair-wise" global data transfer in Crystal Router. Obviously, there is data transfer alone the diagnal. When the scale of Crystal Router increase to 100, the "5-rank community" is still the dominant pattern in a multi-stage manner. The same pattern can be observed from the global data transfer. Our observation about the dominant communication pattern of Crystal Router is the multi-stage "5-rank community" and "pair-wise" global data transfer happen recursively as the scale of the application increase.
+
+Figure \ref{fig: cr data trans} shows the amount of data each rank transferred in Crystal Router. The locality pattern of "5-rank community" can still be spotted in this figure. The spiky shape occurs in the frequency of every 5 rank. Unlike AMG, the there is variance between the amount of data send and received for each rank. This is due to the specific feature of Crystal Router's communication pattern.
+
+
+\subsection{MultiGrid}
+\label{sec:multigrid}
+
+Differe from AMG, MultiGrid is geometric multigrid v-cycle from production elliptic solver BoxLib, a software framework for massively parallel block-structured adaptive mesh refinement (AMR) codes. MultiGrid conforms to 3D lattice communication pattern with decreasing message size and collectives for different parts of the multigrid v-cycle. It is widely used for structured grid physics packages.
+
+\begin{figure}[h!] 
+  \centering
+  \includegraphics[width=0.38\textwidth]{figs/mg/mg125_ct}
+   \caption{Communication Topology of MultiGrid with 125 MPI Ranks }
+   \label{fig: multigrid125 communication topology}
+\end{figure}
+
+\begin{figure}[h!] 
+  \centering
+  \includegraphics[width=0.38\textwidth]{figs/mg/mg_data_transfer}
+   \caption{The amount of data each rank transferred in MultiGrid. }
+   \label{fig: cr data trans}
 \end{figure}
 
 
+\section{Simulation Platform}
+\label{sec:simulation}
 
-\subsection{Communication Pattern}
-\label{sec:communication pattern matrix}
-
-In this section, we analysis four communication patterns that are most prevalent in scientific computation.
-They are All-to-All, Nearest Neighbor, Collective and Random\cite{roth}. All these four communication patterns are so typical that Message Passing Interface(MPI), the most popular parallel programming scheme, provides explicit support\cite{Pjesivac} \cite{thakur}.
-
-A parallel application usuall conforms to a combination of several basic communication patterns. At its different execution phases, the application's communication behavior may follow different basic patterns repectively. There are many profiling tools available to capture the communication behavior from parallel applications, such as Tuning and Analysis Utilities(TAU)\cite{tau}, mpiP\cite{mpip} and ScalaTrace\cite{scala}. They can keep track of how much data was transferred between each pair of processes in the application and how long those transfer operations took. With the help from such profiling tools, we can get a matrix that summarizes the communication between processes within the application. Such matrix could contain information about
-
-\begin{itemize}
- \item how many times each process send/receive data to each other process using MPI point-to-point operations.
- \item the amount of data has been sent/received in each MPI operation between processes.
- \item the amount of data has been sent/received by each process using MPI collective operation
- 
-\end{itemize}
+A simulation toolkit named CODES (Co-Design of Multi-layer Exascale Storage Architecture) from Argonne National Lab enables the exploration of simulating different HPC networks with high fidelity\cite{Jason-2011}\cite{mubarak-sc2012}. CODES is built on top of Rensselaer Optimistic Simulation System (ROSS) parallel discrete-event simulator, which is capable of processing billions of events per second on leadership-class supercomputers\cite{ross}. CODES support both torus and dragonfly network with high fidelity flit-level simulation. In this work, we only use torus network to show the impact of node allocation to job with different dominant communication patterns. CODES has this network workload component that capable of conducting trace-driven simulation. It can take real MPI application trace generated by SST DUMPI\cite{sst} to drive CODES network models. 
 
 
-that can be calibrated by these three communication patterns, we suppose each has \emph{n} parallel processes, we use $m_{i,j}$ to denote the amount of data sent from the \emph{i}th process to \emph{j}th process via network. Communication pattern matrix $M$ is used to characterizing the total amount of data transferred among all the processes within each application.
+Torus networks have been extensively used in the current generation of supercomputers because of their linear scaling on per-node cost and competitive communication performance. The topology of torus network is k-ary n-cube, with $k^n$ nodes in total arranged in an n-dimensional grid having k nodes in each dimension. Each node has 2$\times$ n direct linked neighbor nodes. 
 
-\subsubsection{All to All}
-\label{sec:all-to-all}
-
-Within parallel application that conforms to All-to-All (A2A) communication pattern, each process sends distinct data to all other processes. The implementation of this A2A communication in MPI is MPI\_Allgather. The communication pattern matrix of this category $M_{a2a}$ like this
-
-\begin{displaymath}
-\begin{bmatrix}
-  0 & m_{1,2} & m_{1,3} & \cdots & m_{1,n-1} & m_{1,n}\\
-  m_{2,1} & 0 & m_{2,3} &\cdots & m_{2,n-1}  & m_{2,n}\\
-  m_{3,1} & m_{3,2} & 0 &\cdots & m_{3,n-1}  & m_{3,n}\\
-  \vdots  & \vdots & \vdots & \ddots & \vdots & \vdots \\
-  m_{n-1,1} & m_{n-1,2} & m_{n-1,3} & \cdots & 0 & m_{n-1,n}\\
-  m_{n,1} & m_{n,2} & m_{n,3} & \cdots & m_{n,n-1} & 0
-\end{bmatrix}
-\end{displaymath}
-
-
-
-
-In $M_{a2a}$, $m_{i,j} = 0$, for every $i=j$, all the elements on diagonal are 0. This is because process doesn't send data via network to itself. As we can see $M_{a2a}$ has a high density and its rank is $n$. One of the representative benchmark application that conforms to A2A communication is DNS3D from NPB3. DNS3D is highly sensitive to network and node allocaiton, since during each step, it executes three Fourier transforms for 3-D scalar variables\cite{zhou-ipdps}.
- 
-\subsubsection{Nearest Neighbor}
-\label{sec:nearest neighbor}
-
-Nearest Neighbor (NN) communication pattern is very common in scientific computations. This is because lots of physical systems are simulated by a set of elements arranged in grid. Cell-based AMR (Adaptive Mesh Refinement) cosmology simulation is one of this kind. Wu et al. in \cite{jingjin} present an ART application that implement cell-based AMR conforms to diagonal dominant NN communication pattern. Its communication pattern matrix $M_{nn}$ like 
-
-\begin{displaymath}
- \begin{bmatrix}
-  0 & m_{1,2} & 0 & \cdots & 0 & 0\\
-  m_{2,1} & 0 & m_{2,3} &\cdots & 0  & 0\\
-  0 & m_{3,2} & 0 &\cdots & 0  & 0\\
-  \vdots  & \vdots & \vdots & \ddots & \vdots & \vdots \\
-  0 & 0 & 0 & \cdots & 0 & m_{n-1, n}\\
-  0 & 0 & 0 & \cdots & m_{n, n-1} & 0
- \end{bmatrix} 
-\end{displaymath} 
-
-
-In $M_{nn}$, $m_{i,j} = 0,$ when $|i-j|\neq 1$, all the elements are equal to zero except those on upper or lower diagonal. Matrix $M_{nn}$ is very sparse and its rank is n-1;
-
- 
-\subsubsection{Collective}
-\label{sec:one-to-allandall-to-one}
-\textcolor{red}{This senction is out of scope now, since we don't have MPI collective results. Every following section talk about Collectives are also obsolete.}
-
-
-Collective communication is a frequently used component in parallel programming schemes like MPI.  One-to-All (O2A) and All-to-One (A2O) are chosen as typical collective operations in this paper. During a O2A operation, one process (usually process with rank ``root'') sends data to all other processes. The implementation of this O2A communication in MPI is MPI\_Bcast and MPI\_Scatter. So, the matrix $M_{o2a}$ is like
-
-\begin{displaymath}
- \begin{bmatrix}
-  0 & 0 &\cdots & 0 &\cdots & 0\\
-  0 & 0 &\cdots & 0 &\cdots & 0\\
-  \vdots  & \vdots & \ddots & \vdots & \ddots & \vdots \\
-  m_{i,1} & m_{i,2} & \cdots & m_{i,j} &\cdots & m_{i,n}\\
-  \vdots  & \vdots & \ddots & \vdots & \ddots & \vdots \\
-  0 & 0 & \cdots 0 &\cdots & 0
-\end{bmatrix} 
-\end{displaymath} 
-
- 
-
-And another commonly used collective communication is All-to-One(A2O), which is the inverse of One-to-All. Instead of spreading data from one process to many others, data in this A2O communication are sent from many processes and gathered to one single process. The implementation of this A2O communication in MPI is MPI\_Gather. O2A communication is so powerful for many parallel algorithms, such as parallel sorting and searching. The matrix $M_{a2o}$ like
-
-\begin{displaymath}
-\begin{bmatrix}
-  0 & 0 &\cdots & m_{1,j} &\cdots & 0\\
-  0 & 0 &\cdots & m_{2,j} &\cdots & 0\\
-  \vdots  & \vdots & \ddots & \vdots & \ddots & \vdots \\
-  0 & 0 & \cdots & m_{i,j} &\cdots & 0\\
-  \vdots  & \vdots & \ddots & \vdots & \ddots & \vdots \\
-  0 & 0 & \cdots & m_{n, j} &\cdots & 0
-\end{bmatrix}  
-\end{displaymath}
-
-
-For O2A and A2O collective communication, their matrixes have all zero elements except only one row or one column. The rank of both matrixes' is 1.\\
-
-
-\subsubsection{Hybrid Communication Pattern}
-
-In real life, parallel scientific computation may conform to different communication at different phases. During the start phases, applications tend to do some collective communications, such as O2A to distribute data among tasks and in during the end phases, A2O are used to collect comuptation results from every tasks. Some applications may conforms to more than one kind of dominant communication pattern, such as pF3D, which is a laser-plasma interaction code that performs local All-to-All communication over sub-communicators and Nearest Neighbor communication over a 3D process grid\cite{langer}. There is no real application that exclusively conforms to certain single communication pattern. In order to represent real application that with different communication pattern during the its different execution phases, its communication pattern matrix can be formulated like 
-
-\begin{equation}
-  M_{hyb} = \alpha_{1}\cdot M_{a2a}+\alpha_{2}\cdot M_{nn}+\alpha_{3}\cdot M_{a2o}+\alpha_{4}\cdot M_{o2a}
-\end{equation}
-And 
-\begin{equation}
-  \sum_{i=1}^{4}\alpha_{i} \equiv 1
-\end{equation}
-
-Here, $\alpha_{i}$ indicates the percentage of communication amount that conforms to each particular communication pattern.
-
-
-
-
-\subsection{Distance Matrix}
-\label{sec:desitance matrix}
-
-In HPC system, batch scheduler plays a important role in job scheduling and system resource management. Batch scheduler is responsible for assigning each job the amount of resource (usually refers to compute nodes) it required. The amount of compute nodes a job required refers to the job's size. Suppose the scheduler provide a job, with size $n$, a set of node $S = \{N_{1}, N_{2},...,N_{n}\}$. If there is a direct link connected between node $N_{i}$ and $N_{j}$, the distance between them $d_{i,j} = 1$. Thus, we can use a distance matrix $D$ to characterizing the distance between nodes within each allocation. Here is what distance matrix $D$ looks like
-
-\begin{displaymath}
- D = \begin{bmatrix}
-  0 & d_{1,2} & d_{1,3} & \cdots & d_{1,n-1} & d_{1,n}\\
-  d_{2,1} & 0 & d_{2,3} &\cdots & d_{2,n-1}  & d_{2,n}\\
-  d_{3,1} & d_{3,2} & 0 &\cdots & 0  & 0\\
-  \vdots  & \vdots & \vdots & \ddots & \vdots & \vdots \\
-  d_{n-1,1} & d_{n-1,2} & d_{n-1,3} & \cdots & 0 & d_{n-1,n}\\
-  d_{n,1} & d_{n,2} & d_{n,3} & \cdots & d_{n,n-1} & 0
- \end{bmatrix} 
-\end{displaymath}
-
-Apparently, the distance between two nodes within each allocation highly depends on system network topology.\\
-
-\subsubsection{k-ary n-cube Distance Matrix}
-\label{sec:k-ary n-cube distance matrix}
-
-As the most popular interconnect nework adopted in current supercomputers, torus (e.g., k-ary n-cube) network has many attractive features like short diameter and low bisection bandwidth \cite{zhou-ipdps}. Torus interconnected network has been adopted by IBM Blue Gene and Cray XT series machines\cite{Dong-SC11}. In this paper, we use torus connected system to demonstrate the effectiveness of our new scheduling framework. Suppose the system network topology is k-ary n-cube,  the diameter of this topology is $\frac{nk}{2}$, and the average distance between any two nodes in this topology is $\frac{nk}{4}$. So, $d_{i,j}$ in the distance matrix $D$ of any allocation made on k-ary n-cube will be
-
-\begin{equation}
-1\leq d_{i,j}\leq \frac{nk}{2}
-\end{equation}
-
-And the average value of $d_{i,j}$ is $\frac{nk}{4}$.
-
-Jobs running on Mira, the BG/Q machine and ANL, can specify its allocation topology when been submitted. It can choose between with or without torus connection. However, allocation without torus connection will suffer a degradation in terms of distance matrix, $d_{i,j}$ will become
-
-\begin{equation}
-  1\leq d_{i,j} \leq k\cdot n
-\end{equation}
-
-
-
-
-\section{Problem Formulation}
-\label{sec:problem formulation}
-
-Although there are lots work about finding the optimal mapping for assigning each process to each node \cite{hpdc14}\cite{jingjin}, in this work, the batch scheduler will assign each job the optimal node allocation with consideration of their communication pattern. The traditional scheduler always try to give each job a compact allocation or the node allocation with network resource that more than enough. We will demonstrate that such generous allocation is unnecessary for job with different communication pattern.
-
-Given a job with communication matrix $M$ and its allocation distance matrix is $D$, the metric hop-byte $M\cdot D$ is usually used to quantify the network cost. The objective of the scheduler is try to find each job a node allocation, whose distance matrix $D$ is most similar to the transpose of communication pattern matrix $M^{\rm T}$, with the objective of
-
-\begin{equation}
-\min \sum_{i=1}^{n} \sum_{j=1}^{n} M \cdot D
-\end{equation}
-
-The traditional scheduler always try to give each job a compact (in terms of shape) allocation or an allocation with superabundant network resource so as to minimize every $d_{i,j}$, which further leads to minimum $M\cdot D$. However, if we check the characteristic of those three typical communication pattern in section\ref{sec:communication pattern matrix}, we can see finding a allocation with minimized every $d_{i,j}$ in distance matrix $D$ cost way too much effort. \textbf{This is because $\min_{i,j \in \{1,n\}} M \cdot D $ depends only on the elements in D at the position of the transpose of $M$.}
-
-Take the One-to-All communication pattern for an example, providing a job conforms to O2A communication pattern with node allocation with minimized every $d_{i,j}$ in $D$ would be such a huge waste, since those $d_{i,j}$ that matter in this scenario reside in only one column. Thus, our scheduler only need to find a allocation within which, exist one node that has short distance to all the other nodes.
-
-
-\section{Simulation Validation}
-\label{sec:simulation validation}
-
-With the help from parallel discrete event driven simulation, simulating large scale interconnect network with high fidelity becomes possible\cite{ross}. Jason et al. from Argonne National Lab develop this simulation toolkit CODES, which provides torus and dragonfly network simulation with high fidelity\cite{Jason-2011}\cite{mubarak-sc2012}.
-
-We conduct massive simulation to validate our new scheduler framework model. Inorder to get a high fidelity of the network performance under workloads with different communication patterns, we use CODES, a parallel discrete event driven simulation toolkit from Argonne National Lab, which can provide torus connected network simulation with high fidelity\cite{Jason-2011}. Torus network model in CODES is built based on several assumptions. The model uses deterministic static routing for its simplicity and data injection rate follows the Poisson Process with mean arrival rate of $\lambda$ \cite{Jason-2011}. In our simulation, each node continuously generates a Poisson Stream of packets, the size of which is $\delta$. The total amount of data generated by each node is $\Delta$, here
-
-\begin{equation}
-\Delta = \sum_{j=1}^{n} m_{i, j} \quad i \in {1,n}
-\end{equation}
-
-\subsection{Simulation Settings}
-\label{sec:simulation settings}
-\textcolor{red}{The scale of network and job would be changed based on the CODES simulation}
-
-For a job requires $n$ nodes submitted to 3D torus-connected system, it gets an allocation of various possible shapes, which could be 3D balanced-cube, 3D unbalanced-cube, 2D balanced-mesh, 2D unbalanced-mesh, 1D list. Figure \ref{fig: allocation} shows some possible allocations for a 64-node job. We use vector $v$ to denote the shape of an allocation. The vector of 3D balanced-cube allocation (in Figure \ref{fig: allocation} as red) is $v=\{4,4,4\}$, 3D unbalanced-cube allocation is $v=\{8,4,2\}$(in Figure \ref{fig: allocation} as green), 2D balanced-mesh allocation is $v=\{8,8,1\}$ (in Figure \ref{fig: allocation} as blue).
-
+For a job requires $n$ nodes submitted to non-partition based 3D torus-connected system, it gets an allocation of various possible shapes, which could be 3D balanced-cube, 3D unbalanced-cube, 2D mesh, or even 1D list. Figure \ref{fig: allocation} shows some possible allocations for a 64-node job. 3D balanced-cube allocation (in Figure \ref{fig: allocation} as red) is $\{4,4,4\}$, 3D unbalanced-cube allocation is $\{8,4,2\}$(in Figure \ref{fig: allocation} as green), 2D mesh allocation is $\{8,8,1\}$ (in Figure \ref{fig: allocation} as blue).
 
 \begin{figure}[h!] 
   \centering
   \includegraphics[width=0.48\textwidth]{Pic/allocationshape/allocation}
-  \caption{64-node job with different allocation shapes. Red, Green and Blue represents 3D balance, 3D unbalance and 2D balance allocation respectively. }
+  \caption{64-node job with different allocation shapes. Red, Green and Blue represents 3D balanced, 3D unbalanced and 2D allocation respectively. }
   \label{fig: allocation}
 \end{figure}
 
-The workload traces we used for evaluating our new scheduling framework consist of jobs with size variation from 64 to 16K. Due to space limitation, we only present the results for job size 64 and 512, both conforms to three different communication patterns. We suppose the scale of the torus network simulated in this experiment is set to $32 \times 32 \times 32 $, $32,768$ nodes in total, thus all the possible allocation for job with size 64 and 1024 are shown in table \ref{table:allocationvector}. Since we construct a symmetric 3D torus network in our simulation (the bandwidth of each link in x, y, x direction are the same), we suppose the allocation with $v=\{x, y, z\}$ is the same compared to all the other allocations with the dimension of the permutation of \{x, y, z\} in terms of jobs performance.
+We implemented a Job Mapping API for CODES, which can provide flexible job allocation strategies. The new API can help us to explore the impact of different allocation strategies to job with specific communication pattern. We have choosen two publicly available HPC network traces provided by the Design Forward Program\cite{design forward webpage}. The detailed analysis of these two traces are present in Section\ref{sec:amg} and \ref{sec:crystalrouter}.
 
-\begin{table}
-\caption{Different allocation vectors for job with size 64-node and 512-node}
-\label{table:allocationvector}
-\begin{center}
-\begin{tabular}{llllr}
-\toprule
-\multicolumn{4}{c}{Item} \\
-\cmidrule(r){2-5}
-Job Size    & 3D-B & 3D-UB & 2D-B & 2D-UB  \\
-\midrule
-64-node      & \{4,4,4\}    & \{8,4,2\}   & \{8,8,1\}  & \{16,4,1\}      \\
-             &       &     &      & \{32,2,1\} \\
-\midrule
-512-node    & \{8,8,8\}   & \{16,8,4\} &     &       \\
-            &       & \{16,16,2\} &    &  \{32,16,1\}      \\
-            &  & \{32,8,2\} & &\\
-            &  & \{32,4,4\} & &\\
-\midrule
-1024-node    &    & \{16,8,8\} &   \{32,32,1\}  &       \\
-            &       & \{16,16,4\} &    &       \\
-            &  & \{32,8,4\} & &\\
-            &  & \{32,16,2\} & &\\
-            
- \bottomrule
-\end{tabular}
-\end{center}
-\end{table}
+
+\subsection{Allocation Simulation}
+\label{sec:alloc sim}
+
+In this section, we analysis the impact of different allocation strategies on two real applications, AMG and Grystal Router. The torus network performance is determined by its dimensionality and link bandwidth. We evaluate the data transfer time of AMG and Crystal Router on torus network with different dimensionality and link bandwidth configurations in section \ref{sec: dimensionality study}. Then, we will show applications performance on 3D torus network with different allocation strategies in section \ref{sec: alloc strategy study}.
+
+\subsection{Torus Dimensionality}
+\label{sec: dimensionality study}
+
+As the increase of the dimensionality of torus netowrk, so does the number of links connected with each node. The increased aggregated bandwidth of each node will definitely reduce the data transfer time of each rank in the application. Figure xxx shows the performance of the AMG and CrystalRouter on a 2K node torus network model with a 3D torus (16x16x8), a 5D torus (8x4x4x4x4), and a 7D torus (4x4x4x4x2x2x2). The bandwidth between nodes is 2GiB/s in one direction, thus, the aggregated bandwidth is 12GiB/s per node in 3D torus, 20GiB/s per node in 5D torus, and 28GiB/s per node in 7D torus. As we can see from the figure, communication time of both applications decrease as the dimensionality of the network increase. The aggregated bandwidth of each node can accelerate the transfer of data. This can justify the fidelity and consistency of the torus network model.
+
+\begin{figure}[h!] 
+  \centering
+  \includegraphics[width=0.38\textwidth]{figs/torusdimen}
+   \caption{The Percentage of maximum time spent by each MPI rank to send data over 3D, 5D and 7D torus networks. }
+   \label{fig: torus dimen study}
+\end{figure}
+
+
+
+\section{Communication Pattern Aware Allocation Policy }
+In this section, we will explore the performance of three applications on different allocations in a 3D torus network. First, we analysis the impact from different allocation shape, then we will present the results by using our communication aware allocation policy.  
+
+\subsection{Different Allocation Shape}
+As we shown in Fig\ref{fig: allocation}, there could be three differet allocation shape on 3D torus network, namely 3D balanced, 3D un-balanced, and 2D. In this section, we will show the performance of three applications on these three different shape allocations.
 
 
 
 
-In our simulation, we set the packet size $\delta$ to 256 Byte. The amount of data transferred by each node pair $m_{i,j}$ is set to 2KB, which indicates $2KB/256B = 8$ packets will be transfterred between each node pair through the job's execution. The number of packets transferred between each node pair $\sigma = m_{i,j}/\delta$. The job size in the simulation is set to $n$.
+\subsection{Allocation Strategies Study}
+\label{sec: alloc strategy study}
 
-\begin{table}
-\caption{Nomenclature}
-\label{table:nomenclature}
-\begin{center}
-  \begin{tabular}{ l | c }
-    \hline \hline
-    Symbol 	& Description \\ \hline \hline
-    $\delta$ 	& packet size. \\ \hline
-    $\sigma$    & the number of packets transferred between each node pair. \\ \hline
-    $\Delta$    & the total amount of data generated by each node, $\Delta = \delta \cdot \sigma$. \\ \hline
-    $N $   	& System size, i.e., the number of nodes in the system.\\ \hline
-    $n$    & job size, i.e., the number of nodes required by the job.\\ \hline
-    $M$    & the communication pattern matrix of each job.\\ \hline
-    $m_{i,j}$ 	& the amount of data transferred between process $p_i$ and $p_j$. \\ \hline
-    $D$    & the distance matrix of the allocation of each job. \\ \hline
-    $d_{i,j}$    & the distance between node $i$ and $j$. \\ \hline
-    \hline
-  \end{tabular}
-\end{center}
-\end{table}
+We proposed two allocation strategies, Compact and Chunk to study the impact of different allocation the application's performance. The Compact allocation always provides application with a cubical allocation on 3D torus, regardless application's communication pattern. This cubical allocation will keep the locality of the application, all the processes reside on it will have the shortest pair-wise distance. 
 
-\subsection{Results}
-\label{sec:results}
-Given the system is $32\times 32 \times 32$ symmetric 3D torus, table \ref{table:allocationvector} shows all the possible allocation vectors for jobs with 64/512-node. Table \ref{tab: 64/512node-job} shows the normalized runtime of these two jobs conform to four different communication patterns with each allocation vector. As shown in table \ref{table:allocationvector}, there could be multiple allocation vectors for the same shape, such as the 512-node job could have 4 different allocation vectors with 3D unbalance shape. The average value of differnt allocation vectors for the same shape is presented in table \ref{tab: 64/512node-job}.
+The Chunk allocation simulation the scenario of non-contiguous allocation strategy employed in production system like Cray XT machines. The traditional non-contiguous allocation simply picks available nodes in spite of their locations and assign them to application. The motivation of non-contiguous allocation act like this is to maximize system utilization, while being blind to application's communication pattern would greatly prolong application's communication time. Although Chunk allocation provides application with non-contigous allocation too, it assign the chunk of nodes in consideration of application's communication pattern. For example, we know the dominant communication pattern of CrystalRouter in section \ref{sec:crystalrouter}, every 5 rank form a community, where intensive communication happens between them. With such knowledge knowledge about application's communication pattern, the Chunk allocation will provide CrystalRouter with allocation that consists of small chunks, the size of which will be at least 5 nodes. 
 
-\begin{table}[ht]
-\begin{center}
-\caption{job conforms to four different communication patterns running 3D torus system. In each row, the values on the upper level are the results for 64-node job, the lower level are for 512-node job.
-\textcolor{red}{Results in this table would be provided by CODES simulation, job scale depends on the job traces we decide to use}} 
-\label{tab: 64/512node-job}
-\begin{tabular}{l c c c c c} 
-\toprule % Top horizontal line
-\toprule
-&\multicolumn{5}{c}{Allocation} \\
-\cmidrule(l){2-6}
-Communication Pattern $M$ & 3D-B & 3D-UB & 2D-B & 2D-UB & NC \\ % Column names row
-
-\midrule % In-table horizontal line
-$M_{a2a}$   & 1  &   &    &   &  \\ % Content row 1
-           & 1  &   &    &   &  \\ % Content row 1
-\midrule
-$M_{nn}$  & 1  &   &    &   &  \\ % Content row 1
-            & 1  &   &    &   &   \\ % Content row 1
-\midrule
-$M_{o2a}$   & 1  &   &    &   &  \\ % Content row 1
-            & 1  &   &    &   & \\ % Content row 1
-\midrule
-$M_{a2o}$    & 1  &   &    &   & \\ % Content row 1
-             & 1  &   &    &   &  \\ % Content row 1
-% \midrule
-% $M_{hyb}$   & 1 & 1.24 & 1.37  & 1.66 \\ % Content row 1
-%             &  &  &    \\ % Content row 1
-\midrule
-\bottomrule % Bottom horizontal line
-\end{tabular}
-\end{center}
-\end{table}
+Figure xxx shows the performance of AMG and CrystalRouter on 3D torus with Compact and Chunk allocation. 
 
 
+
+
+
+
+\iffalse
 
 \section{Scheduling Mechanism}
 \label{sec:scheduling mechanism}
 
-Figure \ref{fig:overall design} shows the overall design of our new scheduling framework. It takes not only job size, user estimated runtime, but also job's communication pattern (CP) as input parameters. The CP here is provided by user, which indicate the most dominant communication pattern of the user job, such as All-to-All, Nearest Neighbor, Collective, ect. The detailed amount of communication data is neither necessary nor possible in this communication pattern. As we prove in section \ref{sec:communication pattern matrix}, job with different CP has different preference about network requirement, hence different preference about allocations. For example, job with All-to-All communication pattern requires more network resource, which means a compact or torus allcoation will guarantee a better performance. However, job conforms to Nearest Neighbor communication pattern won't fully utilize the torus network or compact allocation, which means a mesh allocation will serve it equally well.
+Figure \ref{fig:overall design} shows the overall design of our new scheduling framework. It takes not only job size, user estimated runtime, but also job's communication pattern (CP) as input parameters. The CP here is provided by user, which indicate the most dominant communication pattern of the user job. The detailed amount of communication data is neither necessary nor possible in this communication pattern. As we show in section \ref{sec:alloc sim} , job with different CP has different preference about network requirement, hence different preference about allocations. For example, job with All-to-All communication pattern requires more network resource, which means a compact or torus allcoation will guarantee a better performance. However, job conforms to Nearest Neighbor communication pattern won't fully utilize the torus network or compact allocation, which means a mesh allocation will serve it equally well.
 
 
 \begin{figure}[h!]     
@@ -422,22 +261,22 @@ Figure \ref{fig:overall design} shows the overall design of our new scheduling f
 Since HPC workload tend to be repetive, our new scheduling framework keep record of historic jobs information to provide quick reference for making the preferable allocation for incoming job with distinct communication pattern. When user submit his job, our new scheduler will first look for job's user name and executable file name in historic record to check whether this job been submitted before. Then the scheduler gets the job's input parameter \{S, CP, ERT\} (job size, Expected RunTime, CommunicationPattern),  and check in the historic data to identify its preferred allocation. As time goes by, our new framework will gradually build up a comprehensive record of all the possible job submission, which is helpful to provide quick reference for the future jobs. Due to the repetitiveness of the workload, the size of this record will grows rapidly at first, then gently grow for a while and come to stagnation, as shown in figure
 \ref{fig:table size growth}. 
 
-\begin{figure}[h!]     
-\centering  
-\includegraphics[width=0.48\textwidth]{Pic/design/tablesize}  
-\caption{The size growth of historic submitted job records.}
-\label{fig:table size growth}
-\end{figure}
+%\begin{figure}[h!]     
+%\centering  
+%\includegraphics[width=0.48\textwidth]{Pic/design/tablesize}  
+%\caption{The size growth of historic submitted job records.}
+%\label{fig:table size growth}
+%\end{figure}
 
 
- We implement a record mechanism as the central component in our framework to keep track of the pattern in workload repetitiveness, hence make predictive optimizations in terms of both job and system performance. Firgure \ref{fig:scheduling mechanism} shows the overview of our design. The scheduler start to build the table since the first submitted job. When user submit a job, the scheduler get job's size and communication pattern, then check the record to find the best allocation for the job. On the other hand, the available resource will be categorized and organized into different types, such as 3D balance, 3D unbalance, 2D balance, 2D unbalance (toruse or mesh). All these available resource will be updated with real-time system feedback information. When a job is finished, the resource it released can be merge into the neighboring one (if the neighbor is also available) to come up with a bigger chunk. So the 2D resource can become into 3D by merging with newly released ones, so does mesh to torus.
+We implement a record mechanism as the central component in our framework to keep track of the pattern in workload repetitiveness, hence make predictive optimizations in terms of both job and system performance. Firgure \ref{fig:scheduling mechanism} shows the overview of our design. The scheduler start to build the table since the first submitted job. When user submit a job, the scheduler get job's size and communication pattern, then check the record to find the best allocation for the job. On the other hand, the available resource will be categorized and organized into different types, such as 3D balance, 3D unbalance, 2D balance, 2D unbalance (toruse or mesh). All these available resource will be updated with real-time system feedback information. When a job is finished, the resource it released can be merge into the neighboring one (if the neighbor is also available) to come up with a bigger chunk. So the 2D resource can become into 3D by merging with newly released ones, so does mesh to torus.
 
-\begin{figure}[h!]     
-\centering  
-\includegraphics[width=0.48\textwidth]{Pic/design/referencetable}  
-\caption{overview of scheduling mechanism}
-\label{fig:scheduling mechanism}
-\end{figure}
+%\begin{figure}[h!]     
+%\centering  
+%\includegraphics[width=0.48\textwidth]{Pic/design/referencetable}  
+%\caption{overview of scheduling mechanism}
+%\label{fig:scheduling mechanism}
+%\end{figure}
 
 With the feedback from system, our scheduling framework will become knowledgeable about the preference of jobs with different communication pattern. The feedback information keep the batch scheduler updated with the latest status of the system such as the number of available nodes, their layout and geometry,  when hotspot or bottleneck come up in network, etc. The scheduler schedule/dispatch the following jobs adaptively based these information.
 
@@ -482,6 +321,22 @@ We can make two reasonable assumption about $\{v\}$ and $\{J\}$.
 \end{equation}
 
 The reason for both Equation \ref{eq:mod0} and \ref{eq:nofrag} stand is the repetitiveness of workload.
+
+
+\subsection{Repetitive Job Submission}
+\label{sec: repetitive job submission}
+
+The same application could run repetitively on HPC system. This is due to users from some scientific areas have to run the same application multiple times with different configurations. For example, some bioinformatics applications need to conduct the same computation i.e. protein sequence alignment, for a large sets of protein sequences. From system's perspective, all these submissions are the same (same computation instructions and communication phases). Therefore, we can observe the same job multiple times with slightly different input parameter, and all these jobs usually belong to the same user. To substantiate our claim, we analyze the workload trace in 2014 from Mira, an IBM Blue/Gene Q system. As it shown in figure \ref{fig: repetitiveness of Mira},  we list the number of total submissions from five most active users and the percentage of the repetitive ones.
+
+
+\begin{figure}[h!] 
+  \centering
+  \includegraphics[width=0.38\textwidth]{Pic/JobInfo/repe-mira-2}
+   \caption{ The repetitive job submissions on Mira in 2014. The percentage of repetitive submissions from certain user can be as much as 90\%. }
+   \label{fig: repetitiveness of Mira}
+\end{figure}
+
+
 
 \subsection{Scheduling Policy 1: Reckless}
 \label{sec:reckless}
@@ -664,48 +519,53 @@ small-sized problems.
 \end{figure}
 
 
+
+\fi
+
+
+
 \section{Experiment Results}
 \label{sec:scheduling results}
-
-\textcolor{red}{all the figs in this section are obsolete!!!}
-
-\begin{figure}[h!] 
-  \centering
-  \includegraphics[width=0.48\textwidth]{Pic/experiment/summary/utilization}
-  \caption{System Utilization got from CC, NC, Greedy, Cautious respectively}
-  \label{fig: uti}
-\end{figure}
-
-
-\begin{figure}[h!] 
-  \centering
-  \includegraphics[width=0.48\textwidth]{Pic/experiment/summary/awt-vs-cc}
-  \caption{Jobs' average wait time reduction got by comparing CC as against our design.}
-  \label{fig: uti}
-\end{figure}
-
-
-\begin{figure}[h!] 
-  \centering
-  \includegraphics[width=0.48\textwidth]{Pic/experiment/summary/art-vs-cc}
-  \caption{Jobs' average response time reduction got by comparing CC as against our design.}
-  \label{fig: uti}
-\end{figure}
-
-\begin{figure}[h!] 
-  \centering
-  \includegraphics[width=0.48\textwidth]{Pic/experiment/summary/awt-vs-nc}
-  \caption{Jobs' average wait time reduction got by comparing NC as against our design.}
-  \label{fig: uti}
-\end{figure}
-
-
-\begin{figure}[h!] 
-  \centering
-  \includegraphics[width=0.48\textwidth]{Pic/experiment/summary/art-vs-nc}
-  \caption{Jobs' average response time reduction got by comparing NC as against our design.}
-  \label{fig: uti}
-\end{figure}
+%
+%\textcolor{red}{all the figs in this section are obsolete!!!}
+%
+%\begin{figure}[h!] 
+%  \centering
+%  \includegraphics[width=0.48\textwidth]{Pic/experiment/summary/utilization}
+%  \caption{System Utilization got from CC, NC, Greedy, Cautious respectively}
+%  \label{fig: uti}
+%\end{figure}
+%
+%
+%\begin{figure}[h!] 
+%  \centering
+%  \includegraphics[width=0.48\textwidth]{Pic/experiment/summary/awt-vs-cc}
+%  \caption{Jobs' average wait time reduction got by comparing CC as against our design.}
+%  \label{fig: uti}
+%\end{figure}
+%
+%
+%\begin{figure}[h!] 
+%  \centering
+%  \includegraphics[width=0.48\textwidth]{Pic/experiment/summary/art-vs-cc}
+%  \caption{Jobs' average response time reduction got by comparing CC as against our design.}
+%  \label{fig: uti}
+%\end{figure}
+%
+%\begin{figure}[h!] 
+%  \centering
+%  \includegraphics[width=0.48\textwidth]{Pic/experiment/summary/awt-vs-nc}
+%  \caption{Jobs' average wait time reduction got by comparing NC as against our design.}
+%  \label{fig: uti}
+%\end{figure}
+%
+%
+%\begin{figure}[h!] 
+%  \centering
+%  \includegraphics[width=0.48\textwidth]{Pic/experiment/summary/art-vs-nc}
+%  \caption{Jobs' average response time reduction got by comparing NC as against our design.}
+%  \label{fig: uti}
+%\end{figure}
 
 
 
@@ -863,6 +723,26 @@ X. Wu, F. Mueller, S. Pakin,
 \newblock SC '11,
 \newblock 2011,pages 12-21.
 
+\bibitem{design forward webpage}
+Department of Energy, “Characterization of the DOE Mini-apps.” [Online].
+\newblock Available: http://portal.nersc.gov/project/CAL/trace.htm
+\newblock (Accessed on: Sept 16th. 2015)
+
+\bibitem{miniapp}
+Bronson Messer
+\newblock "Using a Developing MiniApp to Compare Platform Characteristics on Cray Systems"
+\newblock In Proceedings of Cray User Group 2012
+
+\bibitem{amg}
+V. E. Henson and U. M. Yang, 
+\newblock "BoomerAMG: A Parallel Algebraic Multigrid Solver and Preconditioner",
+\newblock Appl. Num. Math. 41 (2002), pp. 155-177. UCRL-JC-141495.
+
+\bibitem{crystalrouter}
+P. Fischer, J. Lottes, D. Pointer, and A. Siegel, 
+\newblock “Petascale algorithms for reactor hydrodynamics,”
+\newblock Journal of Physics: Conference Series, vol. 125, no. 1, p. 012076, 2008.
+
 %+++++++++++++++++
 
 %=====start of network papers===== 
@@ -963,6 +843,12 @@ Prisacari, Bogdan and Rodriguez, German and Heidelberger, Philip and Chen, Dong 
 \newblock 2014,
 \newblock  Vancouver, BC, Canada,
 
+
+\bibitem{hpdc2015-ornl}
+Philip. C.R, Jeremy S. M, etc
+\newblock "Automated Characterization of Parallel Application Communication Patterns"
+\newblock HPDC'15
+
 \bibitem{Dong-SC11}
 Dong Chen; Eisley, N.A.; Heidelberger, P.; Senger, R.M.; Sugawara, Y.; Kumar,
 S.; Salapura, V.; Satterfield, D.L.; Steinmacher-Burow, B.; Parker, J.J., 
@@ -981,10 +867,10 @@ Jason Cope, Ning Liu, Sam Lang, Phil Carns, Chris Carothers, Robert Ross.
 %===simulation papers =====
 
 \bibitem{ross}
-C. Carothers, D. Bauer, and S. Pearce.
-\newblock ROSS: A High-Performance, Low memory, Modular Time Warp System. 
-\newblock Journal of Parallel and Distributed Computing,
-\newblock (62):1648–1669, 2002.
+P. D. Barnes, C. D. Carothers, D. R. Jefferson, and J. M. LaPre, 
+\newblock “Warp speed: executing time warp on 1,966,080 cores,”
+\newblock in Proc. of the 2013 ACM SIGSIM Conf. on Principles of Advanced Discrete Simulation (PADS),
+\newblock May 2013, pp. 327–336.
 
 \bibitem{mubarak-sc2012}
 Mubarak, M.; Carothers, C.D.; Ross, R.; Carns, P.,
@@ -993,7 +879,10 @@ Mubarak, M.; Carothers, C.D.; Ross, R.; Carns, P.,
 \newblock 2012 SC Companion: 
 \newblock pp.366,376, 10-16 Nov. 2012
 
-
+\bibitem{sst}
+Sandia National Labs, “SST DUMPI trace library.” [Online].
+\newblock Available: http://sst.sandia.gov/using dumpi.html 
+\newblock (Accessed on: Sept 3rd, 2015)
 
 
 \end{thebibliography}
