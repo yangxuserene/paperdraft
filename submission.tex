@@ -26,7 +26,7 @@
 %
 % paper title
 % can use linebreaks \\ within to get better formatting as desired
-\title{Intelligent HPC Job Scheduling with Communication Pattern Awareness}
+\title{Smart HPC Job Allocation with Communication Pattern Awareness}
 % author names and affiliations
 % use a multiple column layout for up to three different
 % affiliations
@@ -209,6 +209,7 @@ In this section, we analysis the impact of different allocation strategies on tw
 \label{sec: dimensionality study}
 
 As the increase of the dimensionality of torus netowrk, so does the number of links connected with each node. The increased aggregated bandwidth of each node will definitely reduce the data transfer time of each rank in the application. Figure xxx shows the performance of the AMG and CrystalRouter on a 2K node torus network model with a 3D torus (16x16x8), a 5D torus (8x4x4x4x4), and a 7D torus (4x4x4x4x2x2x2). The bandwidth between nodes is 2GiB/s in one direction, thus, the aggregated bandwidth is 12GiB/s per node in 3D torus, 20GiB/s per node in 5D torus, and 28GiB/s per node in 7D torus. As we can see from the figure, communication time of both applications decrease as the dimensionality of the network increase. The aggregated bandwidth of each node can accelerate the transfer of data. This can justify the fidelity and consistency of the torus network model.
+\textcolor{green}{cr1000 on 7D result is missing in Fig\ref{fig: dimenstudy-avgtime} and \ref{fig: dimenstudy-maxtime} , will be added soon.}
 
 \begin{figure}[h!] 
   \centering
@@ -224,7 +225,9 @@ As the increase of the dimensionality of torus netowrk, so does the number of li
    \label{fig: dimenstudy-avgtime}
 \end{figure}
 
-\textcolor{green}{cr1000 on 7D result is missing, will be added soon.}
+\textcolor{blue}{sensitivity study of 5D torus with 2GB,4GB,8GB will be added here. }
+
+
 \textcolor{red}{We can also provide Per-Rank time spent for data transfer. not sure if necessay.}
 
 
@@ -280,10 +283,10 @@ We proposed two allocation strategies, Compact and Chunk to study the impact of 
 
 The Chunk allocation simulation the scenario of non-contiguous allocation strategy employed in production system like Cray XT machines. The traditional non-contiguous allocation simply picks available nodes in spite of their locations and assign them to application. The motivation of non-contiguous allocation act like this is to maximize system utilization, while being blind to application's communication pattern would greatly prolong application's communication time. Although Chunk allocation provides application with non-contigous allocation too, it assign the chunk of nodes in consideration of application's communication pattern. For example, we know the dominant communication pattern of CrystalRouter in section \ref{sec:crystalrouter}, every 5 rank form a community, where intensive communication happens between them. With such knowledge knowledge about application's communication pattern, the Chunk allocation will provide CrystalRouter with allocation that consists of small chunks, the size of which will be at least 5 nodes. 
 
-Figure xxx shows the performance of AMG and CrystalRouter on 3D torus with Compact and Chunk allocation. 
+Figure xxx shows the performance of AMG, CrystalRouter and MultiGrid on 3D torus with Compact and Chunk allocation. 
 
 
-
+\textcolor{red}{The results and figures for this part is not ready yet!!!}
 
 
 
@@ -564,54 +567,12 @@ small-sized problems.
 \end{figure}
 
 
-
-\fi
-
-
-
 \section{Experiment Results}
 \label{sec:scheduling results}
-%
-%\textcolor{red}{all the figs in this section are obsolete!!!}
-%
-%\begin{figure}[h!] 
-%  \centering
-%  \includegraphics[width=0.48\textwidth]{Pic/experiment/summary/utilization}
-%  \caption{System Utilization got from CC, NC, Greedy, Cautious respectively}
-%  \label{fig: uti}
-%\end{figure}
-%
-%
-%\begin{figure}[h!] 
-%  \centering
-%  \includegraphics[width=0.48\textwidth]{Pic/experiment/summary/awt-vs-cc}
-%  \caption{Jobs' average wait time reduction got by comparing CC as against our design.}
-%  \label{fig: uti}
-%\end{figure}
-%
-%
-%\begin{figure}[h!] 
-%  \centering
-%  \includegraphics[width=0.48\textwidth]{Pic/experiment/summary/art-vs-cc}
-%  \caption{Jobs' average response time reduction got by comparing CC as against our design.}
-%  \label{fig: uti}
-%\end{figure}
-%
-%\begin{figure}[h!] 
-%  \centering
-%  \includegraphics[width=0.48\textwidth]{Pic/experiment/summary/awt-vs-nc}
-%  \caption{Jobs' average wait time reduction got by comparing NC as against our design.}
-%  \label{fig: uti}
-%\end{figure}
-%
-%
-%\begin{figure}[h!] 
-%  \centering
-%  \includegraphics[width=0.48\textwidth]{Pic/experiment/summary/art-vs-nc}
-%  \caption{Jobs' average response time reduction got by comparing NC as against our design.}
-%  \label{fig: uti}
-%\end{figure}
 
+
+
+\fi
 
 
 \section{Related Work}
