@@ -112,14 +112,14 @@ AMG is the MiniApp of Algebraic Multigrid Solver, which is a parallel algebraic 
 
 \begin{figure}[h!] 
   \centering
-  \includegraphics[width=0.38\textwidth]{figs/amg/amg_ct}
+  \includegraphics[width=0.38\textwidth]{figs/appstudy/amg/amg_ct}
    \caption{Communication Topology of AMG with 27 MPI Ranks }
    \label{fig: amg communication topology}
 \end{figure}
 
 \begin{figure}[h!] 
   \centering
-  \includegraphics[width=0.38\textwidth]{figs/amg/amg_data_transfer}
+  \includegraphics[width=0.38\textwidth]{figs/appstudy/amg/amg_data_transfer}
    \caption{The amount of data each rank transferred in AMG. }
    \label{fig: amg data trans}
 \end{figure}
@@ -136,21 +136,21 @@ The second MiniApp we have is Crystal Router, which is the extracted communicati
 
 \begin{figure}[h!] 
   \centering
-  \includegraphics[width=0.38\textwidth]{figs/cr/cr10_ct}
+  \includegraphics[width=0.38\textwidth]{figs/appstudy/cr/cr10_ct}
    \caption{Communication Topology of Crystal Router with 10 MPI Ranks }
    \label{fig: crystalrouter10 communication topology}
 \end{figure}
 
 \begin{figure}[h!] 
   \centering
-  \includegraphics[width=0.38\textwidth]{figs/cr/cr100_ct}
+  \includegraphics[width=0.38\textwidth]{figs/appstudy/cr/cr100_ct}
    \caption{Communication Topology of Crystal Router with 100 MPI Ranks }
    \label{fig: crystalrouter100 communication topology}
 \end{figure}
 
 \begin{figure}[h!] 
   \centering
-  \includegraphics[width=0.38\textwidth]{figs/cr/cr_data_transfer}
+  \includegraphics[width=0.38\textwidth]{figs/appstudy/cr/cr_data_transfer}
    \caption{The amount of data each rank transferred in Crystal Router. }
    \label{fig: cr data trans}
 \end{figure}
@@ -167,14 +167,14 @@ Differe from AMG, MultiGrid is geometric multigrid v-cycle from production ellip
 
 \begin{figure}[h!] 
   \centering
-  \includegraphics[width=0.38\textwidth]{figs/mg/mg125_ct}
+  \includegraphics[width=0.38\textwidth]{figs/appstudy/mg/mg125_ct}
    \caption{Communication Topology of MultiGrid with 125 MPI Ranks }
    \label{fig: multigrid125 communication topology}
 \end{figure}
 
 \begin{figure}[h!] 
   \centering
-  \includegraphics[width=0.38\textwidth]{figs/mg/mg_data_transfer}
+  \includegraphics[width=0.38\textwidth]{figs/appstudy/mg/mg_data_transfer}
    \caption{The amount of data each rank transferred in MultiGrid. }
    \label{fig: cr data trans}
 \end{figure}
@@ -212,11 +212,20 @@ As the increase of the dimensionality of torus netowrk, so does the number of li
 
 \begin{figure}[h!] 
   \centering
-  \includegraphics[width=0.38\textwidth]{figs/torusdimen}
-   \caption{The Percentage of maximum time spent by each MPI rank to send data over 3D, 5D and 7D torus networks. }
-   \label{fig: torus dimen study}
+  \includegraphics[width=0.38\textwidth]{figs/dimenstudy/maxtime}
+   \caption{The Percentage of Maximum Time spent to send data over 3D, 5D and 7D torus networks by AMG1728, CrystalRouter1000, MultiGrid1000.}
+   \label{fig: dimenstudy-maxtime}
 \end{figure}
 
+\begin{figure}[h!] 
+  \centering
+  \includegraphics[width=0.38\textwidth]{figs/dimenstudy/avgtime}
+   \caption{The Percentage of Average Time spent to send data over 3D, 5D and 7D torus networks by AMG1728, CrystalRouter1000, MultiGrid1000.}
+   \label{fig: dimenstudy-avgtime}
+\end{figure}
+
+\textcolor{green}{cr1000 on 7D result is missing, will be added soon.}
+\textcolor{red}{We can also provide Per-Rank time spent for data transfer. not sure if necessay.}
 
 
 \section{Communication Pattern Aware Allocation Policy }
@@ -225,8 +234,44 @@ In this section, we will explore the performance of three applications on differ
 \subsection{Different Allocation Shape}
 As we shown in Fig\ref{fig: allocation}, there could be three differet allocation shape on 3D torus network, namely 3D balanced, 3D un-balanced, and 2D. In this section, we will show the performance of three applications on these three different shape allocations.
 
+There are lots of research work try to design fancy allocation algorithms to provide application with most compact allocation, like using space filling curve (SFC) to index high dimentional cube into one dimensional list. Allocation by cutting chunks of nodes from this one dimensional list will guarantee cubical allocation. However, try to provide cubical allocation without considering application's communication pattern could cause backfire.
 
+\textcolor{red}{Detail explanation will be add for Fig\ref{fig: shapestudy-avgtime}-Fig\ref{fig: shapestudy-mg125}.}
 
+\begin{figure}[h!] 
+  \centering
+  \includegraphics[width=0.38\textwidth]{figs/shapestudy/avgtime}
+   \caption{The Percentage of Average Time spent to send data by AMG216, CrystalRouter100, MultiGrid125 with 2D, 3D-unbalanced, 3D-balanced allocation.}
+   \label{fig: shapestudy-avgtime}
+\end{figure}
+
+\begin{figure}[h!] 
+  \centering
+  \includegraphics[width=0.38\textwidth]{figs/shapestudy/maxtime}
+   \caption{The Percentage of Max Time spent to send data by AMG216, CrystalRouter100, MultiGrid125 with 2D, 3D-unbalanced, 3D-balanced allocation.}
+   \label{fig: shapestudy-maxtime}
+\end{figure}
+
+\begin{figure}[h!] 
+  \centering
+  \includegraphics[width=0.38\textwidth]{figs/shapestudy/amg216_rank_msgtime}
+   \caption{(AMG216) Time spent by each rank to send data on 2D, 3D-unbalanced, 3D-balanced allocation. }
+   \label{fig: shapestudy-amg216}
+\end{figure}
+
+\begin{figure}[h!] 
+  \centering
+  \includegraphics[width=0.38\textwidth]{figs/shapestudy/cr100_rank_msgtime}
+   \caption{(CrystalRouter100) Time spent by each rank to send data on on 2D, 3D-unbalanced, 3D-balanced allocation.}
+   \label{fig: shapestudy-cr100}
+\end{figure}
+
+\begin{figure}[h!] 
+  \centering
+  \includegraphics[width=0.38\textwidth]{figs/shapestudy/mg125_rank_msgtime}
+   \caption{(MultiGrid125) Time spent by each rank to send data on 2D, 3D-unbalanced, 3D-balanced allocation.}
+   \label{fig: shapestudy-mg125}
+\end{figure}
 
 \subsection{Allocation Strategies Study}
 \label{sec: alloc strategy study}
