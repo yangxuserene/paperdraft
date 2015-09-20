@@ -26,7 +26,7 @@
 %
 % paper title
 % can use linebreaks \\ within to get better formatting as desired
-\title{Smart HPC Job Allocation with Communication Pattern Awareness}
+\title{Study of Intra/Inter-Application Interference for Smart Job Allocation on HPC system}
 % author names and affiliations
 % use a multiple column layout for up to three different
 % affiliations
@@ -103,7 +103,7 @@ A parallel application usuall conforms to a combination of several basic communi
 
 There are many profiling tools available to capture the communication behavior from parallel applications, such as Tuning and Analysis Utilities(TAU)\cite{tau}, mpiP\cite{mpip}. They can help analysis parallel application, providing information like the percentage of different MPI operations of the applications, communication topology, the amount data transferred between processes.
 
-In this work, we provide detailed analysis about the communication pattern of two DOE MiniApps. MiniApps are reduced proxy applications that encapsulate the salient performance of larger full size applications\cite{miniapp}. Since we only focus on the dominant communication pattern of parallel applications, these MiniApps are perfect candidates for analysis the application's performance on different allocations or on new network architectures.
+In this work, we provide detailed analysis about the communication pattern of two DOE MiniApps. MiniApps are reduced proxy applications that encapsulate the salient performance of larger full size applications\cite{miniapp}. Since we only focus on the dominant communication pattern of parallel applications, these MiniApps are perfect candidates for analysis the application's performance on different allocations or on new network architectures. We choose three MiniApps, namely, Algebraic Multigrid Solver(AMG), Geometric MultiGrid(MultiGrid) and CrystalRouter. Their communication patterns can be representative for most MiniApps listed on the DOE Design Forward Webpage\cite{design forward webpage}. The communication pattern figures we present here are generated with the IPM\cite{ipm} data from \cite{design forward webpage}.
 
 
 \subsection{AMG}
@@ -113,7 +113,7 @@ AMG is the MiniApp of Algebraic Multigrid Solver, which is a parallel algebraic 
 \begin{figure}[h!] 
   \centering
   \includegraphics[width=0.38\textwidth]{figs/appstudy/amg/amg_ct}
-   \caption{Communication Topology of AMG with 27 MPI Ranks }
+   \caption{Rank-Rank communication topology of AMG with 27 mpi ranks. This figure is redrawed by collected data from\cite{design forward webpage}.   }
    \label{fig: amg communication topology}
 \end{figure}
 
@@ -137,21 +137,21 @@ The second MiniApp we have is Crystal Router, which is the extracted communicati
 \begin{figure}[h!] 
   \centering
   \includegraphics[width=0.38\textwidth]{figs/appstudy/cr/cr10_ct}
-   \caption{Communication Topology of Crystal Router with 10 MPI Ranks }
+   \caption{Rank-Rank communication topology of CrystalRouter with 10 mpi ranks. This figure is redrawed by collected data from\cite{design forward webpage}. }
    \label{fig: crystalrouter10 communication topology}
 \end{figure}
 
 \begin{figure}[h!] 
   \centering
   \includegraphics[width=0.38\textwidth]{figs/appstudy/cr/cr100_ct}
-   \caption{Communication Topology of Crystal Router with 100 MPI Ranks }
+   \caption{Rank-Rank communication topology of CrystalRouter with 100 mpi ranks. This figure is redrawed by collected data from\cite{design forward webpage}. }
    \label{fig: crystalrouter100 communication topology}
 \end{figure}
 
 \begin{figure}[h!] 
   \centering
   \includegraphics[width=0.38\textwidth]{figs/appstudy/cr/cr_data_transfer}
-   \caption{The amount of data each rank transferred in Crystal Router. }
+   \caption{The amount of data each rank transferred in CrystalRouter. }
    \label{fig: cr data trans}
 \end{figure}
 
@@ -168,7 +168,7 @@ Differe from AMG, MultiGrid is geometric multigrid v-cycle from production ellip
 \begin{figure}[h!] 
   \centering
   \includegraphics[width=0.38\textwidth]{figs/appstudy/mg/mg125_ct}
-   \caption{Communication Topology of MultiGrid with 125 MPI Ranks }
+   \caption{Rank-Rank communication topology of MultiGrid with 125 mpi ranks. This figure is redrawed by collected data from\cite{design forward webpage}. }
    \label{fig: multigrid125 communication topology}
 \end{figure}
 
@@ -180,7 +180,7 @@ Differe from AMG, MultiGrid is geometric multigrid v-cycle from production ellip
 \end{figure}
 
 
-\section{Simulation Platform}
+\section{Research Vehicle}
 \label{sec:simulation}
 
 A simulation toolkit named CODES (Co-Design of Multi-layer Exascale Storage Architecture) from Argonne National Lab enables the exploration of simulating different HPC networks with high fidelity\cite{Jason-2011}\cite{mubarak-sc2012}. CODES is built on top of Rensselaer Optimistic Simulation System (ROSS) parallel discrete-event simulator, which is capable of processing billions of events per second on leadership-class supercomputers\cite{ross}. CODES support both torus and dragonfly network with high fidelity flit-level simulation. In this work, we only use torus network to show the impact of node allocation to job with different dominant communication patterns. CODES has this network workload component that capable of conducting trace-driven simulation. It can take real MPI application trace generated by SST DUMPI\cite{sst} to drive CODES network models. 
@@ -231,7 +231,7 @@ As the increase of the dimensionality of torus netowrk, so does the number of li
 \textcolor{red}{We can also provide Per-Rank time spent for data transfer. not sure if necessay.}
 
 
-\section{Communication Pattern Aware Allocation Policy }
+\section{Interference Analysis}
 In this section, we will explore the performance of three applications on different allocations in a 3D torus network. First, we analysis the impact from different allocation shape, then we will present the results by using our communication aware allocation policy.  
 
 \subsection{Different Allocation Shape}
@@ -449,6 +449,13 @@ X. Wu, F. Mueller, S. Pakin,
 Department of Energy, “Characterization of the DOE Mini-apps.” [Online].
 \newblock Available: http://portal.nersc.gov/project/CAL/trace.htm
 \newblock (Accessed on: Sept 16th. 2015)
+
+\bibitem{ipm}
+David Skinner, Nicholas Wright, Karl Fuerlinger and Kathy Yelick
+\newblock Integrated Performance Montoring(IPM)
+\newblock Available http://ipm-hpc.sourceforge.net/overview.html
+\newblock (Accessed on: Sept 16th. 2015)
+
 
 \bibitem{miniapp}
 Bronson Messer
