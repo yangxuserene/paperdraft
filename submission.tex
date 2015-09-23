@@ -17,8 +17,10 @@
 \usepackage{url}
 \usepackage{xcolor}
 \usepackage{amsmath}
+%\usepackage{subfig}
 \usepackage{graphicx}
-%\usepackage{caption}
+\usepackage{caption}
+\usepackage{subcaption}
 %\usepackage[labelfont=bf]{caption}
 \usepackage[font=bf,labelsep=space]{caption}
 
@@ -61,12 +63,32 @@ It has been widely recoginzed that network contension between concurrently runni
 
 The scale of supercomputer keeps growing from petascale to exascale, to accomodate the the demand of insatiable computing power from scientific research areas. Production systems contain hundreds of thousands of processors serve as irreplaceable research vehicle for scientific problems with increasing size and complexity. Supercomputers employed in a shared way to accomodate many jobs running concurrently\ref{fig: mira activity} , which will also improve system utilization. These jobs share the system infrastructure such as network, I/O bandwidth, which will inevitably cause contention over the shared resource. As supercomputer continues to evolve, these shared resources are tend to become the bottleneck for performance.
 
-\begin{figure}[h!] 
-  \centering
-  \includegraphics[width=0.38\textwidth]{figs/mira}
-   \caption{The activity of Mira, IBM BlueGene/Q system at Argonne National Lab. Many jobs runninng concurrently on the system. Different jobs represented by specific colors. }
-   \label{fig: mira activity}
+
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[t]{0.2\textwidth}
+        \centering
+        \includegraphics[height=1.2in]{figs/goodallocation}
+        \caption{God.}
+        \label{fig:overview_sub1}
+    \end{subfigure}%
+    \hspace{1em}%
+    \begin{subfigure}[t]{0.2\textwidth}
+        \centering
+        \includegraphics[height=1.2in]{figs/badallocation}
+        \caption{Bad.}
+        \label{fig:overview_sub2}
+    \end{subfigure}%
+   \caption{Indication of multiple jobs running on Cray system. Many jobs runninng concurrently on the system. Different jobs represented by specific colors.}
+   \label{fig: overview}
 \end{figure}
+
+%\begin{figure}[h!] 
+%  \centering
+%  \includegraphics[width=0.38\textwidth]{figs/mira}
+%   \caption{The activity of Mira, IBM BlueGene/Q system at Argonne National Lab. Many jobs runninng concurrently on the system. Different jobs represented by specific colors. }
+%   \label{fig: mira activity}
+%\end{figure}
 
 One of the most prominant problem comes into researcher's attention is the network contention between concurrently running jobs. The network sharing between concurrently running jobs cause communication variability, which reslut in jobs running slower and longer waiting time for results. The delay of currently running jobs will increase the queueing time of the following submitted jobs, thus leads to low system throughput, low utilization and high energy cost. The network sharing can even cause interference between neighbouring jobs, abort the the running job unexpectedly, or even worse, wrong science results. 
 
@@ -110,9 +132,13 @@ In this work, we provide detailed analysis about the communication pattern of tw
 \label{sec:amg}
 AMG is the MiniApp of Algebraic Multigrid Solver, which is a parallel algebraic multigrid solver for linear systems arising from problems on unstructured mesh physics packages. It has been derived directly from the BoomerAMG solver that is being developed in the Center for Applied Scientific Computing (CASC) at LLNL\cite{amg}. The dominant communication pattern is this regional communication with decreasing message size for different parts of the multigrid v-cycle.
 
+Figure \ref{fig: amg communication topology} shows the communication topology of a small scale AMG with 27 MPI Ranks. Here we prefer to show the communication topology with small scale version of the MiniApp because the dominant communication pattern of the application doesn't change with its scale. We can make the observation from the upper-left of the figure that each rank in AMG has intense communication between 3 other ranks, such as rank 0 between rank 1, 3 and 9, rank 1 between 2, 4 and 10, etc. And this relation is also symmetric along the main diagnal. The dominant communication pattern is quite obvious when we identify this relation between ranks.
+
+Figure \ref{fig: amg data trans} shows the amount of data each rank transferred in AMG. The blue line shows that total data amount transferred from each rank, while the red shows the amount of received data and green shows the amount of send data. The first thing we can spot from the figure is that for each rank, the amount of data sent and received are basically the same, which also well explain the symmetry of the application's dominant communication pattern. And the second thing we can find about AMG is that the data transfer amount also has a symmetric pattern. Rank 0 has the same amout of data transfer as Rank 26, Rank 1 as of Rank 25, etc.
+
 \begin{figure}[h!] 
   \centering
-  \includegraphics[width=0.38\textwidth]{figs/appstudy/amg/amg_ct}
+  \includegraphics[width=0.38\textwidth]{figs/appstudy/amg/amg_pip}
    \caption{Rank-Rank communication topology of AMG with 27 mpi ranks. This figure is redrawed by collected data from\cite{design forward webpage}.   }
    \label{fig: amg communication topology}
 \end{figure}
@@ -124,9 +150,7 @@ AMG is the MiniApp of Algebraic Multigrid Solver, which is a parallel algebraic 
    \label{fig: amg data trans}
 \end{figure}
 
-Figure \ref{fig: amg communication topology} shows the communication topology of a small scale AMG with 27 MPI Ranks. Here we prefer to show the communication topology with small scale version of the MiniApp because the dominant communication pattern of the application doesn't change with its scale. We can make the observation from the upper-left of the figure that each rank in AMG has intense communication between 3 other ranks, such as rank 0 between rank 1, 3 and 9, rank 1 between 2, 4 and 10, etc. And this relation is also symmetric along the main diagnal. The dominant communication pattern is quite obvious when we identify this relation between ranks.
 
-Figure \ref{fig: amg data trans} shows the amount of data each rank transferred in AMG. The blue line shows that total data amount transferred from each rank, while the red shows the amount of received data and green shows the amount of send data. The first thing we can spot from the figure is that for each rank, the amount of data sent and received are basically the same, which also well explain the symmetry of the application's dominant communication pattern. And the second thing we can find about AMG is that the data transfer amount also has a symmetric pattern. Rank 0 has the same amout of data transfer as Rank 26, Rank 1 as of Rank 25, etc.
 
 
 \subsection{Crystal Router}
@@ -134,16 +158,10 @@ Figure \ref{fig: amg data trans} shows the amount of data each rank transferred 
 
 The second MiniApp we have is Crystal Router, which is the extracted communication kernel of the full application Nek5000. Nek5000\cite{crystalrouter} is a spectral element CFD application developed at Argonne National Laboratory. It features spectral element multigrid solvers coupled with a highly scalable, parallel coarse-grid solver that widely used for projects including ocean current modeling, thermal hydraulics of reactor cores, and spatiotemporal chaos. The MiniApp of Nek5000, Crystal Router demonstrates the "many-to-many" communication pattern through scalable multi-stage communication process.
 
-\begin{figure}[h!] 
-  \centering
-  \includegraphics[width=0.38\textwidth]{figs/appstudy/cr/cr10_ct}
-   \caption{Rank-Rank communication topology of CrystalRouter with 10 mpi ranks. This figure is redrawed by collected data from\cite{design forward webpage}. }
-   \label{fig: crystalrouter10 communication topology}
-\end{figure}
 
 \begin{figure}[h!] 
   \centering
-  \includegraphics[width=0.38\textwidth]{figs/appstudy/cr/cr100_ct}
+  \includegraphics[width=0.38\textwidth]{figs/appstudy/cr/cr_pip}
    \caption{Rank-Rank communication topology of CrystalRouter with 100 mpi ranks. This figure is redrawed by collected data from\cite{design forward webpage}. }
    \label{fig: crystalrouter100 communication topology}
 \end{figure}
@@ -155,7 +173,7 @@ The second MiniApp we have is Crystal Router, which is the extracted communicati
    \label{fig: cr data trans}
 \end{figure}
 
-Here, we provide the communication topology graph of Crystal Router with 10-rank and 100-rank respectively. As we can see from figure \ref{fig: crystalrouter10 communication topology}, every 5-rank is a compact community, where data transfer is very intensive. Beside the "5-rank community", there is "pair-wise" global data transfer in Crystal Router. Obviously, there is data transfer alone the diagnal. When the scale of Crystal Router increase to 100, the "5-rank community" is still the dominant pattern in a multi-stage manner. The same pattern can be observed from the global data transfer. Our observation about the dominant communication pattern of Crystal Router is the multi-stage "5-rank community" and "pair-wise" global data transfer happen recursively as the scale of the application increase.
+As we can see from figure \ref{fig: crystalrouter100 communication topology}, every 5-rank is a compact community, where data transfer is very intensive. Beside the "5-rank community", there is "pair-wise" global data transfer in Crystal Router. Obviously, there is data transfer alone the diagnal. When the scale of Crystal Router increase to 100, the "5-rank community" is still the dominant pattern in a multi-stage manner. The same pattern can be observed from the global data transfer. Our observation about the dominant communication pattern of Crystal Router is the multi-stage "5-rank community" and "pair-wise" global data transfer happen recursively as the scale of the application increase.
 
 Figure \ref{fig: cr data trans} shows the amount of data each rank transferred in Crystal Router. The locality pattern of "5-rank community" can still be spotted in this figure. The spiky shape occurs in the frequency of every 5 rank. Unlike AMG, the there is variance between the amount of data send and received for each rank. This is due to the specific feature of Crystal Router's communication pattern.
 
@@ -167,7 +185,7 @@ Differe from AMG, MultiGrid is geometric multigrid v-cycle from production ellip
 
 \begin{figure}[h!] 
   \centering
-  \includegraphics[width=0.38\textwidth]{figs/appstudy/mg/mg125_ct}
+  \includegraphics[width=0.38\textwidth]{figs/appstudy/mg/mg_pip}
    \caption{Rank-Rank communication topology of MultiGrid with 125 mpi ranks. This figure is redrawed by collected data from\cite{design forward webpage}. }
    \label{fig: multigrid125 communication topology}
 \end{figure}
@@ -185,165 +203,184 @@ Differe from AMG, MultiGrid is geometric multigrid v-cycle from production ellip
 
 A simulation toolkit named CODES (Co-Design of Multi-layer Exascale Storage Architecture) from Argonne National Lab enables the exploration of simulating different HPC networks with high fidelity\cite{Jason-2011}\cite{mubarak-sc2012}. CODES is built on top of Rensselaer Optimistic Simulation System (ROSS) parallel discrete-event simulator, which is capable of processing billions of events per second on leadership-class supercomputers\cite{ross}. CODES support both torus and dragonfly network with high fidelity flit-level simulation. In this work, we only use torus network to show the impact of node allocation to job with different dominant communication patterns. CODES has this network workload component that capable of conducting trace-driven simulation. It can take real MPI application trace generated by SST DUMPI\cite{sst} to drive CODES network models. 
 
-
-Torus networks have been extensively used in the current generation of supercomputers because of their linear scaling on per-node cost and competitive communication performance. The topology of torus network is k-ary n-cube, with $k^n$ nodes in total arranged in an n-dimensional grid having k nodes in each dimension. Each node has 2$\times$ n direct linked neighbor nodes. 
-
-For a job requires $n$ nodes submitted to non-partition based 3D torus-connected system, it gets an allocation of various possible shapes, which could be 3D balanced-cube, 3D unbalanced-cube, 2D mesh, or even 1D list. Figure \ref{fig: allocation} shows some possible allocations for a 64-node job. 3D balanced-cube allocation (in Figure \ref{fig: allocation} as red) is $\{4,4,4\}$, 3D unbalanced-cube allocation is $\{8,4,2\}$(in Figure \ref{fig: allocation} as green), 2D mesh allocation is $\{8,8,1\}$ (in Figure \ref{fig: allocation} as blue).
-
-\begin{figure}[h!] 
-  \centering
-  \includegraphics[width=0.48\textwidth]{Pic/allocationshape/allocation}
-  \caption{64-node job with different allocation shapes. Red, Green and Blue represents 3D balanced, 3D unbalanced and 2D allocation respectively. }
-  \label{fig: allocation}
-\end{figure}
-
 We implemented a Job Mapping API for CODES, which can provide flexible job allocation strategies. The new API can help us to explore the impact of different allocation strategies to job with specific communication pattern. We have choosen two publicly available HPC network traces provided by the Design Forward Program\cite{design forward webpage}. The detailed analysis of these two traces are present in Section\ref{sec:amg} and \ref{sec:crystalrouter}.
 
+The torus network performance is determined by its dimensionality and link bandwidth. As the increase of the dimensionality of torus netowrk, so does the number of links connected with each node. The increased aggregated bandwidth of each node will definitely reduce the data transfer time of each rank in the application. Figure \ref{fig: dimenstudy} shows the performance of the AMG, CrystalRouter and MultiGrid on a 2K node torus network model with a 3D torus (16x16x8), a 5D torus (8x4x4x4x4), and a 7D torus (4x4x4x4x2x2x2). The bandwidth between nodes is 2GiB/s in one direction, thus, the aggregated bandwidth is 12GiB/s per node in 3D torus, 20GiB/s per node in 5D torus, and 28GiB/s per node in 7D torus. As we can see from these figures, communication time of both applications decrease as the dimensionality of the network increase. The increased aggregated bandwidth of each node can accelerate the transfer of data. This can justify the fidelity and consistency of the torus network model. The same pattern can be found in Figure \ref{fig:bandwidthstudy}, as the bandwidth increase from 2GiB/s, to 4GiB/s and 8GiB/s in the 5D torus network, the data transfer time can be greatly reduced.
 
-\subsection{Allocation Simulation}
-\label{sec:alloc sim}
-
-In this section, we analysis the impact of different allocation strategies on two real applications, AMG and Grystal Router. The torus network performance is determined by its dimensionality and link bandwidth. We evaluate the data transfer time of AMG and Crystal Router on torus network with different dimensionality and link bandwidth configurations in section \ref{sec: dimensionality study}. Then, we will show applications performance on 3D torus network with different allocation strategies in section \ref{sec: alloc strategy study}.
-
-\subsection{Torus Dimensionality}
-\label{sec: dimensionality study}
-
-As the increase of the dimensionality of torus netowrk, so does the number of links connected with each node. The increased aggregated bandwidth of each node will definitely reduce the data transfer time of each rank in the application. Figure xxx shows the performance of the AMG and CrystalRouter on a 2K node torus network model with a 3D torus (16x16x8), a 5D torus (8x4x4x4x4), and a 7D torus (4x4x4x4x2x2x2). The bandwidth between nodes is 2GiB/s in one direction, thus, the aggregated bandwidth is 12GiB/s per node in 3D torus, 20GiB/s per node in 5D torus, and 28GiB/s per node in 7D torus. As we can see from the figure, communication time of both applications decrease as the dimensionality of the network increase. The aggregated bandwidth of each node can accelerate the transfer of data. This can justify the fidelity and consistency of the torus network model.
-\textcolor{green}{cr1000 on 7D result is missing in Fig\ref{fig: dimenstudy-avgtime} and \ref{fig: dimenstudy-maxtime} , will be added soon.}
-
-\begin{figure}[h!] 
-  \centering
-  \includegraphics[width=0.38\textwidth]{figs/dimenstudy/maxtime}
-   \caption{The Percentage of Maximum Time spent to send data over 3D, 5D and 7D torus networks by AMG1728, CrystalRouter1000, MultiGrid1000.}
-   \label{fig: dimenstudy-maxtime}
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[t]{0.2\textwidth}
+        \centering
+        \includegraphics[height=1.2in]{figs/dimenstudy/avgtime}
+        \caption{Normalized Average Time.}
+        \label{fig:1sub1}
+    \end{subfigure}%
+    \hspace{1em}%
+    \begin{subfigure}[t]{0.2\textwidth}
+        \centering
+        \includegraphics[height=1.2in]{figs/dimenstudy/maxtime}
+        \caption{Normalized Max Time.}
+        \label{fig:1sub2}
+    \end{subfigure}%
+   \caption{Normalized time spent to send data over 3D, 5D and 7D torus networks by AMG1728, CrystalRouter1000, MultiGrid1000.}
+   \label{fig: dimenstudy}
 \end{figure}
 
-\begin{figure}[h!] 
-  \centering
-  \includegraphics[width=0.38\textwidth]{figs/dimenstudy/avgtime}
-   \caption{The Percentage of Average Time spent to send data over 3D, 5D and 7D torus networks by AMG1728, CrystalRouter1000, MultiGrid1000.}
-   \label{fig: dimenstudy-avgtime}
+
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[t]{0.2\textwidth}
+        \centering
+        \includegraphics[height=1.3in]{figs/bandwidthstudy/avgtime}
+        \caption{Normalized Average Time.}
+        \label{fig:2sub1}
+    \end{subfigure}%
+    \hspace{1em}%
+    \begin{subfigure}[t]{0.2\textwidth}
+        \centering
+        \includegraphics[height=1.3in]{figs/bandwidthstudy/maxtime}
+        \caption{Normalized Max Time.}
+        \label{fig:2sub2}
+    \end{subfigure}%
+   \caption{Normalized time spent to send data over 5D torus with 2GB/s, 4GB/s and 8GB/s bandwidth by AMG1728, CrystalRouter1000, MultiGrid1000.}
+   \label{fig:bandwidthstudy}
 \end{figure}
 
-\textcolor{blue}{sensitivity study of 5D torus with 2GB,4GB,8GB will be added here. }
-
-
-\textcolor{red}{We can also provide Per-Rank time spent for data transfer. not sure if necessay.}
+%\begin{figure}[h!] 
+%  \centering
+%  \includegraphics[width=0.38\textwidth]{figs/bandwidthstudy/maxtime}
+%   \caption{The Normalized Max Time spent to send data over 5D torus with 2GB/s, 4GB/s and 8GB/s bandwidth by AMG1728, CrystalRouter1000, MultiGrid1000.}
+%   \label{fig: bandwidthstudy-maxtime}
+%\end{figure}
+%
+%\begin{figure}[h!] 
+%  \centering
+%  \includegraphics[width=0.38\textwidth]{figs/bandwidthstudy/avgtime}
+%   \caption{The Normalized Average Time spent to send data over 5D torus with 2GB/s, 4GB/s and 8GB/s bandwidth by AMG1728, CrystalRouter1000, MultiGrid1000.}
+%   \label{fig: bandwidthstudy-avgtime}
+%\end{figure}
 
 
 \section{Interference Analysis}
-In this section, we will explore the performance of three applications on different allocations in a 3D torus network. First, we analysis the impact from different allocation shape, then we will present the results by using our communication aware allocation policy.  
+\textbf{presents results of single app running with con/non-cont allocation}
+In this section, we will explore the communication interference. First, we will analysis the application's intra-job interference by assigning each job different shapes of allocation. All these allcoation are contigous in their dimensionality.
 
-\subsection{Different Allocation Shape}
-As we shown in Fig\ref{fig: allocation}, there could be three differet allocation shape on 3D torus network, namely 3D balanced, 3D un-balanced, and 2D. In this section, we will show the performance of three applications on these three different shape allocations.
+Torus networks have been extensively used in the current generation of supercomputers because of their linear scaling on per-node cost and competitive communication performance. The topology of torus network is k-ary n-cube, with $k^n$ nodes in total arranged in an n-dimensional grid having k nodes in each dimension. Each node has 2$\times$ n direct linked neighbor nodes. 
 
-There are lots of research work try to design fancy allocation algorithms to provide application with most compact allocation, like using space filling curve (SFC) to index high dimentional cube into one dimensional list. Allocation by cutting chunks of nodes from this one dimensional list will guarantee cubical allocation. However, try to provide cubical allocation without considering application's communication pattern could cause backfire.
+\subsection{Intra-Job Interference Analysis}
+\label{sec: introjob}
 
-\textcolor{red}{Detail explanation will be add for Fig\ref{fig: shapestudy-avgtime}-Fig\ref{fig: shapestudy-mg125}.}
+To study the intra-job interference of each job, we simulate each job running on 3D torus network with different allocation shapes. We assign each application with three different shapes allocation, i.e. 3D balanced-cube, 3D unbalanced-cube, 2D mesh. Figure \ref{figs/cont/allocation} shows some possible allocations for a 64-node job. 3D balanced allocation is $\{4,4,4\}$ as red, 3D unbalanced allocation is $\{8,4,2\}$ as green, 2D allocation is $\{8,8,1\}$ as blue.
+
+Figure \ref{fig: differentshape-time} shows the data transfter time of three applications running with three different allocation ships.
+
+%There are lots of research work try to design fancy allocation algorithms to provide application with most compact allocation, like using space filling curve (SFC) to index high dimentional cube into one dimensional list. Allocation by cutting chunks of nodes from this one dimensional list will guarantee cubical allocation. However, try to provide cubical allocation without considering application's communication pattern could cause backfire.
+
+
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[t]{0.2\textwidth}
+        \centering
+        \includegraphics[height=1.2in]{figs/intra-job/shapestudy/avgtime}
+        \caption{Normalized Average Time.}
+        \label{fig:shape-sub1}
+    \end{subfigure}%
+    \hspace{1em}%
+    \begin{subfigure}[t]{0.2\textwidth}
+        \centering
+        \includegraphics[height=1.2in]{figs/intra-job/shapestudy/maxtime}
+        \caption{Normalized Max Time.}
+        \label{fig:shape-sub2}
+    \end{subfigure}%
+   \caption{Normalized time spent to send data by AMG216, CrystalRouter100, MultiGrid125 with 2D, 3D-unbalanced, 3D-balanced allocation.}
+   \label{fig: differentshape-time}
+\end{figure}
+
+
+%\begin{figure}[h!] 
+%  \centering
+%  \includegraphics[width=0.38\textwidth]{figs/shapestudy/amg216_rank_msgtime}
+%   \caption{(AMG216) Time spent by each rank to send data on 2D, 3D-unbalanced, 3D-balanced allocation. }
+%   \label{fig: shapestudy-amg216}
+%\end{figure}
+%
+%\begin{figure}[h!]
+%  \centering
+%  \includegraphics[width=0.38\textwidth]{figs/shapestudy/cr100_rank_msgtime}
+%   \caption{(CrystalRouter100) Time spent by each rank to send data on on 2D, 3D-unbalanced, 3D-balanced allocation.}
+%   \label{fig: shapestudy-cr100}
+%\end{figure}
+%
+%\begin{figure}[h!] 
+%  \centering
+%  \includegraphics[width=0.38\textwidth]{figs/shapestudy/mg125_rank_msgtime}
+%   \caption{(MultiGrid125) Time spent by each rank to send data on 2D, 3D-unbalanced, 3D-balanced allocation.}
+%   \label{fig: shapestudy-mg125}
+%\end{figure}
+Then, we simulate each application running on 3D torus with contiguous allocation and non-contiguous allocation. For non-contiguous allocation we set the chunk size to 10 in order to preserve application's locality. Figure \ref{fig: non-cont-vs-cont} shows the data transfer time of application running with contiguous and non-contiguous allocation.
 
 \begin{figure}[h!] 
   \centering
-  \includegraphics[width=0.38\textwidth]{figs/shapestudy/avgtime}
-   \caption{The Percentage of Average Time spent to send data by AMG216, CrystalRouter100, MultiGrid125 with 2D, 3D-unbalanced, 3D-balanced allocation.}
-   \label{fig: shapestudy-avgtime}
+  \includegraphics[width=0.38\textwidth]{figs/intra-job/non-cont-vs-cont}
+   \caption{Three Applications running exclusively on 3D torus with contigous and non-contiguous allocation}
+   \label{fig: non-cont-vs-cont}
 \end{figure}
+
+
+
+
+\subsection{Inter-Job Interference Analysis}
+\label{sec: interjob ference study}
+
+\begin{figure}[t!]
+    \centering
+    \begin{subfigure}[t]{0.2\textwidth}
+        \centering
+        \includegraphics[height=1.2in]{figs/cont/allocation}
+        \caption{Contiguous}
+        \label{fig:cont_sub1}
+    \end{subfigure}%
+    \hspace{1em}%
+    \begin{subfigure}[t]{0.2\textwidth}
+        \centering
+        \includegraphics[height=1.2in]{figs/inter-job/noncont/sharing}
+        \caption{Non-contiguous}
+        \label{fig:noncont_sub1}
+    \end{subfigure}%
+%    \hspace{1em}%
+%    \begin{subfigure}[t]{0.2\textwidth}
+%        \centering
+%        \includegraphics[height=1.2in]{figs/inter-job/noncont/exclusive}
+%        \caption{"Exclusive Mode".}
+%        \label{fig:noncont_sub2}
+%    \end{subfigure}
+    \caption{(a) Illustrates the contiguous allocation in different shape. (b) Illustrates the non-contiguous allocation with chunk of size 4.}
+\end{figure}
+
+In order to analysis the interference between concurrently runing jobs, we simulate three application running concurrently on the same 3D network.  We assign each application with a non-contiguous set of small chunk of nodes, 'chunk' refers to a small number(like 4) of adjacent nodes as shown in Figure \ref{fig:noncont_sub1}. The chunk belongs to one application is next to each other. The "chunk" size is critical to the application's performance. Figure\ref{fig: chunk_size} shows the results of applications' data transfer time with different chunk size. 
+
 
 \begin{figure}[h!] 
   \centering
-  \includegraphics[width=0.38\textwidth]{figs/shapestudy/maxtime}
-   \caption{The Percentage of Max Time spent to send data by AMG216, CrystalRouter100, MultiGrid125 with 2D, 3D-unbalanced, 3D-balanced allocation.}
-   \label{fig: shapestudy-maxtime}
+  \includegraphics[width=0.38\textwidth]{figs/inter-job/noncont/chunk_size}
+   \caption{The Normalized Time spent to send data by AMG216, CrystalRouter100, MultiGrid125 with different chunk size.}
+   \label{fig: chunk_size}
 \end{figure}
 
-\begin{figure}[h!] 
-  \centering
-  \includegraphics[width=0.38\textwidth]{figs/shapestudy/amg216_rank_msgtime}
-   \caption{(AMG216) Time spent by each rank to send data on 2D, 3D-unbalanced, 3D-balanced allocation. }
-   \label{fig: shapestudy-amg216}
-\end{figure}
-
-\begin{figure}[h!] 
-  \centering
-  \includegraphics[width=0.38\textwidth]{figs/shapestudy/cr100_rank_msgtime}
-   \caption{(CrystalRouter100) Time spent by each rank to send data on on 2D, 3D-unbalanced, 3D-balanced allocation.}
-   \label{fig: shapestudy-cr100}
-\end{figure}
-
-\begin{figure}[h!] 
-  \centering
-  \includegraphics[width=0.38\textwidth]{figs/shapestudy/mg125_rank_msgtime}
-   \caption{(MultiGrid125) Time spent by each rank to send data on 2D, 3D-unbalanced, 3D-balanced allocation.}
-   \label{fig: shapestudy-mg125}
-\end{figure}
-
-\subsection{Allocation Strategies Study}
-\label{sec: alloc strategy study}
-
-We proposed two allocation strategies, Compact and Chunk to study the impact of different allocation the application's performance. The Compact allocation always provides application with a cubical allocation on 3D torus, regardless application's communication pattern. This cubical allocation will keep the locality of the application, all the processes reside on it will have the shortest pair-wise distance. 
-
-The Chunk allocation simulation the scenario of non-contiguous allocation strategy employed in production system like Cray XT machines. The traditional non-contiguous allocation simply picks available nodes in spite of their locations and assign them to application. The motivation of non-contiguous allocation act like this is to maximize system utilization, while being blind to application's communication pattern would greatly prolong application's communication time. Although Chunk allocation provides application with non-contigous allocation too, it assign the chunk of nodes in consideration of application's communication pattern. For example, we know the dominant communication pattern of CrystalRouter in section \ref{sec:crystalrouter}, every 5 rank form a community, where intensive communication happens between them. With such knowledge knowledge about application's communication pattern, the Chunk allocation will provide CrystalRouter with allocation that consists of small chunks, the size of which will be at least 5 nodes. 
-
-Figure xxx shows the performance of AMG, CrystalRouter and MultiGrid on 3D torus with Compact and Chunk allocation. 
-
-
-\textcolor{red}{The results and figures for this part is not ready yet!!!}
 
 
 
 
 \section{Related Work}
 \label{sec:related_work}
-Batch scheduling on HPC system has been a hot topic getting constant discussion since the 1990's.
-Feitelson et al proposed the most widely used job scheduling policy which is First Come, First Serve (FCFS) combined with 
-EASY backfilling\cite{feit}. FCFS/EASY backfilling policy greatly improves HPC system's utilization and cuts the wait time 
-of first job in the waiting queue. Since then, many studies seek to refine this classic scheduling paradigm. Tang et al. 
-tried to improve the accuracy of user's estimated job runtime and walltime so as to enhance the efficiency of backfilling and  minimize the system fragmentation\cite{wei-ipdps2010} \cite{wei-jpdc2013} \cite{wei-ipdps2011}. % And there are some other variation of FCFS/EASY backfilling proposed to optimize system performance in terms of power consumption and energy cost \cite{zhou}\cite{yang-sc13}.
 
+P1: tools for monitoring and profiling
 
-Only with the information about job size and estimated run time seems to be insufficient for batch scheduler do make the 
-optimal scheduling/allocaiton decision. Some work proposed that the batch scheduler should be aware of some information 
-about system network information in order to fully utilize system resources.Leung et al. presented allocation strategies 
-based on space filling curves and one dimensional packing \cite{leung}. The problem with using space filling curve is that  
-it can only be applied to system with the scale of $2^n$ nodes in each dimension, which is a ideal case that not existing 
-in morden HPC systems. Albing et al. conducted study about the allocation strategies that the Cray
-Application Level Placement Scheduler (ALPS) used \cite{carl-cug}. The job allocation in Cray Linux Environment (CLE) 
-operating system is managed by ALPS, which simply works off an ordered node list, however that is ordered. 
+P2: communication pattern
 
-Based on their 
-work, Yang et al. presented a window-based locality-aware job scheduling design for torus-connected system
-\cite{yang-cluster14}. In this new scheduling framework, several jobs are taken into  consideration at the same time for job 
-prioritizing and resource allocation. A list of slots is maintained to preserve node contiguity information for
-resource allocation. Each job been assigned into one of these slot so that the locality can be mostly preserved.
+P3: Interference between concurrently running jobs
 
-Rosenthal et al. found there is limited benefit for many applications by
-increasing network bandwidth \cite{rosenthal}. They employed a subset of the
-CORAL mini-applications that represent U.S. Department of Energy workload and
-leverage multirail networkings to evaluate the improvement of these applications
-caused by increased network bandwidth. The applications that send mostly small
-messages or larger messages asynchronously are not bandwidth bounded, hence,
-benefit only slightly or not at all from increased bandwidth.
-
-   
-
-Hoefler et al. propose to use performance modeling techniques to analysis 
-factors that impact the performance of parallel scientific applications 
-\cite{hoefler-modeling}. However, as the scale of HPC continue grows, the 
-interference of concurrently running jobs is getting worse, which is hard to be 
-quantified by performance profiling tools.
-
-
-Bogdan et al provide a set of guidelines how to configure a network with 
-Dragonfly topology for workload with Nearest Neighbor communication 
-pattern\cite{Bogdan-hpdc14}. They first derived a theoretical model of Nearest 
-Neighbor communication performance on Dragonfly network that can predict network 
-bottleneck. Then, they use simulation to validate the correctness of their 
-theoretical model.
-
-Dong et al describe IBM Blue Gene/Q's 5D torus interconnect
-network\cite{Dong-SC11}. They developed simple benchmarks that conforms to four
-different communication patterns, namely ping-pong, nearest neighbor, broadcast
-and allredcue, to demonstrate the effectiveness of this highly parallel 5D torus
-network.
+P4: Job allocation(little bit)
 
 
 
