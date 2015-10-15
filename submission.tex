@@ -126,9 +126,9 @@ The rest of this paper is organized as follows. Section~\ref{sec:application stu
 
 %A parallel application usually conforms to a combination of several basic communication patterns\cite{roth}. At its different execution phases, the application's communication behavior may follow different basic patterns respectively. \textcolor{blue}{When we look into the data flow during application execution, most parallel applications start with broadcast operation to distribute the data from root process to other processes\textcolor{red}{ref needed here}, followed by a series of computation and communication that conforms to certain pattern, which is usually the dominant part of application's execution. Before the application come to completion, all the working process will return their results to the root directly or hierarchically.} Parallel application's communication pattern usually involves lots of factors, such as communication intensity, operation-to-operation dependencies and the ``critical path" in its communication topology graph, etc. In this work, we focus on the locality of application's rank-to-rank communication topology graph.
 
-A parallel application usually conforms to a combination of several basic communication patterns \cite{roth}. At its different execution phases, the application's communication behavior may follow different basic patterns respectively. There are many profiling tools \cite{tau}\cite{mpip}\cite{scala}\cite{sst}\cite{oxbow} available to capture information regarding communication patterns of parallel applications. They can help analyze parallel applications' communication behavior, providing information like the percentage of different MPI operations of the applications, communication topology, the amount data transferred between processes.
+A parallel application usually conforms to a combination of several basic communication patterns \cite{roth}. At its different execution phases, the application's communication behavior may follow different basic patterns respectively. There are many profiling tools available to capture information regarding communication patterns of parallel applications~\cite{tau,mpip,scala,sst,oxbow}. They can provide information such as the percentage of different MPI operations of the applications, communication topology, the amount of data transferred between processes.
 
-There are many applications running on HPC systems like Mira \cite{bgq} and Titan \cite{titan}. Most of these applications are parallel and communication intensive, and conform to different communication patterns. In this work, we select three representative applications from DOE Design Forward project \cite{designforwardwebpage}. Each application conforms to a distinctive communication pattern that is commonly seen from applications in HPC workload. We believe these three applications can represent a big group of applications that conform to similar communication patterns. The applications studied in this work are Algebraic MultiGrid Solver(AMG), Geometric MultiGrid(MultiGrid) and CrystalRouter. The communication pattern figures we present in Section \ref{sec:amg}, \ref{sec:crystalrouter}, \ref{sec:multigrid} are generated with the IPM \cite{ipm} data from \cite{designforwardwebpage}.
+There are many applications running on HPC systems, such as Mira \cite{bgq} and Titan \cite{titan}, that are communication intensive and conform to various communication patterns. In this work, we select three representative applications from the DOE Design Forward project \cite{designforwardwebpage} \TODO{better cite for this?}. Each application exhibits a distinctive communication pattern that is commonly seen HPC applications. We believe these three applications can represent a big group of applications that conform to similar communication patterns. The applications studied in this work are the Algebraic MultiGrid Solver (AMG), Geometric MultiGrid (MultiGrid) and CrystalRouter. The communication pattern figures we present in Section~\ref{sec:amg}, \ref{sec:crystalrouter}, and \ref{sec:multigrid} are generated with the IPM \cite{ipm} data from publicly available Design Forward traces~\cite{designforwardwebpage}.
 
 % MiniApps are reduced proxy applications that encapsulate the salient performance of larger full size applications \cite{miniapp}. Since we only focus on the dominant communication pattern of parallel applications, these MiniApps are perfect candidates for analysis the application's performance on different allocations or on new network architectures. We choose three MiniApps, namely, Algebraic Multigrid Solver(AMG), Geometric MultiGrid(MultiGrid) and CrystalRouter. Their representative communication patterns that are commonly seen in the HPC system workload. The communication pattern figures we present here are generated with the IPM \cite{ipm} data from \cite{designforwardwebpage}.
 
@@ -142,26 +142,23 @@ There are many applications running on HPC systems like Mira \cite{bgq} and Tita
         \centering
         \includegraphics[height=1.2in]{figs/appstudy/amg/amg_pip}
         \caption{Communication Topology}
-        \label{fig: amg communication topology}
+        \label{fig:amg-communication-topology}
     \end{subfigure}%
     ~
     \begin{subfigure}[t]{0.22\textwidth}
         \centering
         \includegraphics[height=1.2in]{figs/appstudy/amg/amg_data_transfer}
         \caption{Data Volume}
-        \label{fig: amg data trans}
+        \label{fig:amg-data-trans}
     \end{subfigure}
     \caption{AMG. (a) rank-to-rank communication topology graph. (b) the data sent/received by each rank in AMG.}
 \end{figure}
 
-AMG is the MiniApp of Algebraic MultiGrid Solver, which is a parallel algebraic multi-grid solver for linear systems arising from problems on unstructured mesh physics packages. It has been derived directly from the BoomerAMG solver that is being developed in the Center for Applied Scientific Computing (CASC) at LLNL \cite{amg}. The dominant communication pattern is this regional communication with decreasing message size for different parts of the multi-grid v-cycle.
+The Algebraic MultiGrid Solver, or AMG, is a parallel algebraic multi-grid solver for linear systems arising from problems on unstructured mesh physics packages. It has been derived directly from the BoomerAMG solver that is being developed in the Center for Applied Scientific Computing (CASC) at LLNL \cite{amg}. The dominant communication pattern is regional communication with decreasing message size for different parts of the multi-grid v-cycle.
 
-Figure \ref{fig: amg communication topology} shows the communication topology of a small scale AMG with 216 MPI Ranks. Here we show the communication topology with small scale version because the dominant communication pattern of the application doesn't change with scale. We can make the observation that AMG's dominant communication pattern is 3D Nearest Neighbor, each rank has intensive communication with with its 6 neighbors unless it is on the boundary. The dominant communication pattern is quite obvious when we identify this relation between ranks.
+Figure~\ref{fig:amg-communication-topology} shows the communication topology of a small scale AMG execution with 216 MPI Ranks. Note that the dominant communication pattern of the application doesn't change with scale. We can make the observation that AMG's dominant communication pattern is 3D Nearest Neighbor, each rank has intensive communication with up to six neighbors, depending on the boundaries of the ranks. Applications with similar pattern include PARTISN\cite{designforwardwebpage} and SNAP \cite{designforwardwebpage} \TODO{need better cites for these...}.
 
-Figure \ref{fig: amg data trans} shows the amount of data each rank transferred in AMG. The red line shows the amount of data sent by each rank, the blue line shows the amount of received data. The data transferring of each rank is between 7MB to 16MB.
-
-AMG represents a group of applications whose dominant communication pattern is Nearest Neighbor. Applications with such similar dominant communication pattern are like PARTISN\cite{designforwardwebpage} and SNAP \cite{designforwardwebpage}.
-
+Figure~\ref{fig:amg-data-trans} shows the amount of data each rank transferred in the example execution. The data transferring of each rank is between 7MB to 16MB, corresponding to whether the rank is on a boundary or not.
 
 \subsection{Crystal Router}
 \label{sec:crystalrouter}
@@ -172,25 +169,23 @@ AMG represents a group of applications whose dominant communication pattern is N
         \centering
         \includegraphics[height=1.2in]{figs/appstudy/cr/cr_pip}
         \caption{Communication Topology}
-        \label{fig: cr communication topology}
+        \label{fig:cr-communication-topology}
     \end{subfigure}
     ~
     \begin{subfigure}[t]{0.22\textwidth}
         \centering
         \includegraphics[height=1.2in]{figs/appstudy/cr/cr_data_transfer}
         \caption{Data Volume}
-        \label{fig: cr data trans}
+        \label{fig:cr-data-trans}
     \end{subfigure}
     \caption{CrystalRouter. (a) rank-to-rank communication topology graph. (b) the data sent/received by each rank in CrystalRouter. }
 \end{figure}
 
-The second MiniApp we have is CrystalRouter, the extracted communication kernel of the full application Nek5000 \cite{crystalrouter}, which is a spectral element CFD application developed at Argonne National Laboratory. It features spectral element multi-grid solvers coupled with a highly scalable, parallel coarse-grid solver that widely used for projects including ocean current modeling, thermal hydraulics of reactor cores, and spatiotemporal chaos. CrystalRouter demonstrates the ``Many-to-Many" communication pattern through scalable multi-stage communication process. The way CrystalRouter works is nodes compute for a while, then synchronize and communicate, continually alternating between these two types of activities.
+The second MiniApp covered is CrystalRouter, the extracted communication kernel of the full application Nek5000 \cite{crystalrouter}, which is a spectral element CFD application developed at Argonne National Laboratory \TODO{should cite the nek5000 website. couldn't find a canonical citation for the software}. It features spectral element multi-grid solvers coupled with a highly scalable, parallel coarse-grid solver that is widely used for projects including ocean current modeling, thermal hydraulics of reactor cores, and spatiotemporal chaos. CrystalRouter demonstrates the ``many-to-many'' communication pattern through a scalable multi-stage communication process. The way CrystalRouter works is nodes compute for a while, then synchronize and communicate, continually alternating between these two types of activities.
 
-The collective communication in CrystalRouter utilizing a recursive doubling approach. Ranks in CrystalRouter conform to a n-dimensional hypercube and recursively splitting into (n-1)-dimensional hypercubes, with communication happening with respect to the links that are severed. The pattern of this recursive communication can be found in Figure \ref{fig: cr communication topology}. By nature of the logarithmic distribution, more data transferring are in the local neighborhood, which consists of 5 ranks.
+The collective communication in CrystalRouter utilizes a recursive doubling approach. Ranks in CrystalRouter conform to a $n$-dimensional hypercube and recursively split into ($n$-1)-dimensional hypercubes, with communication occurring along the splitting plane. The pattern of this communication can be found in Figure~\ref{fig:cr-communication-topology}. By nature of the logarithmic splitting process, a substantial portion of the communication occurs in small neighborhoods of ranks. CrystalRouter represents a group of applications whose dominant communication is a hybrid of multi-stage local and hierarchical global communication, and shares similarities with most MPI collective communication implementations.
 
-Figure \ref{fig: cr data trans} shows the amount of data each rank transferred in CrystalRouter. The spiky shape indicates there is intensive data transferring in the local neighborhood. There is great variance of data transferring among the ranks in CrystalRouter, which is between 20MB to 36MB. This is due to the specific feature of CrystalRouter's communication pattern.
-
-CrystalRouter represents a group of applications whose dominant communication is a hybrid of multi-stage local and hierarchical global communication.
+Figure~\ref{fig:cr-data-trans} shows the amount of data each rank transferred in CrystalRouter, which ranges between 20MB to 36MB. This is due to the rank counts not matching one-for-one with points in the hypercube.
 
 \subsection{MultiGrid}
 \label{sec:multigrid}
@@ -201,28 +196,23 @@ CrystalRouter represents a group of applications whose dominant communication is
         \centering
         \includegraphics[height=1.2in]{figs/appstudy/mg/mg_pip}
         \caption{Communication Topology}
-        \label{fig: mg communication topology}
+        \label{fig:mg-communication-topology}
     \end{subfigure}
     ~
     \begin{subfigure}[t]{0.22\textwidth}
         \centering
         \includegraphics[height=1.2in]{figs/appstudy/mg/mg_data_transfer}
         \caption{Data Volume}
-        \label{fig: mg data trans}
+        \label{fig:mg-data-trans}
     \end{subfigure}
     \caption{MultiGrid. (a) rank-to-rank communication topology graph. (b) the data sent/received by each rank in MultiGrid.}
 \end{figure}
 
-MultiGrid is geometric multi-grid v-cycle from production elliptic solver BoxLib, a software framework for massively parallel block-structured adaptive mesh refinement (AMR) codes. MultiGrid conforms to Many-to-Many communication pattern with decreasing message size and collectives for different parts of the multi-grid v-cycle. It is widely used for structured grid physics packages. 
+MultiGrid is geometric multi-grid v-cycle from the production elliptic solver BoxLib, a software framework for massively parallel block-structured adaptive mesh refinement (AMR) codes \TODO{cite?}. MultiGrid conforms to many-to-many communication pattern with decreasing message size and collectives for different parts of the multi-grid v-cycle. It is widely used for structured grid physics packages. 
 
-Figure \ref{fig: mg communication topology} shows the communication topology of MultiGrid with 125 ranks. We can see intensive communication along the diagnal that conforms to 3D Nearest Neighbor communication pattern. However, there are also considerable amount of data transferring on both sides of the diagnal, which means the dominant communication pattern of MultiGrid is ``Many-to-Many".
+Figure~\ref{fig:mg-communication-topology} shows the communication topology of MultiGrid with 125 ranks. We can see intensive communication along the diagonal that resembles nearest neighbor communication, similar to AMG. However, the communication topology leads to a greater ``spread'' of communication across the set of ranks, challenging the maximization of communication locality with respect to rank. In this sense, it can be considered a ``many-to-many'' pattern. Applications with such similar dominant communication pattern are like FillBoundary and MiniDFT \cite{designforwardwebpage}.
 
-Figure\ref{fig: mg data trans} shows the the amount of data transferred between ranks in MultiGrid. The data transferring of each rank is relatively small and stable, which is between 2.8MB to 2.9MB. 
-
-MultiGrid represents a group of applications whose dominant communication pattern is Many-to-Many (some literatures also refer it as All-to-All \cite{roth}).  Applications with such similar dominant communication pattern are like FillBoundary and MiniDFT \cite{designforwardwebpage}.
-
-
-
+Figure~\ref{fig:mg-data-trans} shows the amount of data transferred between ranks in MultiGrid. For this miniapp, The data transferred per rank is relatively small and stable, between 2.8MB to 2.9MB.
 
 %\begin{figure*}[t!]
 %    \centering
