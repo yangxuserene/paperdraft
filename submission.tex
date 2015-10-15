@@ -22,8 +22,12 @@
 \usepackage{graphicx}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{soul}
 %\usepackage[labelfont=bf]{caption}
 \usepackage[font=bf,labelsep=space]{caption}
+
+\newcommand{\TODO}[1]{\hl{TODO: #1}}
+\newcommand{\NOTE}[1]{\hl{NOTE: #1}}
 
 \begin{document}
 %
@@ -53,7 +57,7 @@ Argonne, IL, USA 60439\\
 
 \begin{abstract} 
 
-Network contention between concurrently running jobs on HPC system is one of the primary causes of performance variability. Optimizing job allocation and avoiding network sharing are proven techniques to alleviate network contention and performance degradation. In this work, we choose three representative HPC applications from DOE Design Forward Project and conduct detailed analysis about intra- and inter-job interference with them. By scrutinizing the communication behaviors of these applications, we identify the relation between applications' communication pattern and the possible interference when they running with different allocations. We propose a novel and flexible strategy that makes allocation with awareness of job's communication pattern. The new strategy can effectively alleviate the performance degradation caused by interference.
+Network contention between concurrently running jobs on HPC systems is a primary cause of performance variability. Optimizing job allocation and avoiding network sharing are hence crucial to alleviate the potential degradation in performance. In order to do these effectively, an understanding of the interaction between applications, their communication patterns, and the system architecture are required. In this work, we choose three representative HPC applications from DOE Design Forward Project and conduct detailed simulations of high-performance network topologies to analyze both intra- and inter-job interference. By scrutinizing the communication behaviors of these applications, we identify relationships between these behaviors and the possible interference induced by different job allocation scenarios. We propose a novel and flexible strategy that makes allocation with awareness of job's communication pattern. The new strategy can effectively alleviate the performance degradation caused by interference. \TODO{We propose a flexible allocation strategy? If not, we want to weaken this, and instead say something like the results of this research illuminate a path towards access-pattern-aware HPC job allocation.}
 
 
 \end{abstract}
