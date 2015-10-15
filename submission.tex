@@ -85,13 +85,6 @@ The scale of supercomputers keeps growing to accommodate the the demand for comp
    \label{fig: overview}
 \end{figure}
 
-%\begin{figure}[h!] 
-%  \centering
-%  \includegraphics[width=0.38\textwidth]{figs/mira}
-%   \caption{The activity of Mira, IBM BlueGene/Q system at Argonne National Lab. Many jobs runninng concurrently on the system. Different jobs represented by specific colors. }
-%   \label{fig: mira activity}
-%\end{figure}
-
 One of the most prominent  problems is network contention among concurrently running jobs. The network sharing among concurrently running jobs causes communication variability that results in jobs running slower \cite{abhinav-sc13}. The delay of running jobs increases the queueing time of the following submitted jobs, thus leading to low system throughput and utilization \cite{jose-ipdps15}. 
 
 This adverse effect of network sharing can be mitigated by providing jobs with isolated allocations and exclusive network resource. The batch scheduler is responsible for assigning job the amount of nodes it requires. On the widely used torus-connected HPC systems \cite{bgq}\cite{tofu}\cite{titan}, two allocation strategies are commonly used. In the partition based allocation, used in Blue Gene series systems, he scheduler assigns each user job a compact and contiguous set of computing nodes. This strategy favors application performance by providing application with isolated partitions and exclusive network connections, thus reducing network contention caused by concurrently running jobs. However, this strategy can cause internal fragmentation (when more nodes are allocated to a job than it requests) and external fragmentation (when sufficient nodes are available for a request, but they can not be allocated contiguously), therefore leading to lower system utilization that is otherwise possible. The other strategy is non-contiguous allocation, used by Cray XT/XE series, in which free nodes are assigned to user jobs whether they are contiguous or not. Non-contiguous allocation eliminates internal and external fragmentation as seen in partition-based systems, thereby leading to high system utilization. However, it introduces other problems, for example scattering application processes all over the system, causing both inter-job and intra-job contention. The non-contiguous node allocation can significantly reduce job performance, especially for communication-intensive ones.
@@ -453,6 +446,18 @@ Communication variability due to network sharing can cause application performan
 In this section we will study both kinds of interference in the context of torus network. 
 Since application's communication pattern won't change with its scale, we choose AMG with 216 ranks, CrystalRouter with 100 ranks, and MultiGrid 125 ranks. And in order to accommodate three applications running concurrently with different allocations, we simulate a 2K-node (16 $\times$ 16 $\times$ 8) 3D torus network for the experiments.
 
+
+\subsection{Intra-Job Interference Analysis}
+\label{sec: introjob}
+
+There are lots of research works \cite{jingjin}\cite{ozan} try to come up with better task mapping algorithms to alleviate the intra-job interference, which is out the scope of our work. In this work, we focus on the analysis of such interference with different allocations. To study the intra-job interference of each job, we simulate each job running on 3D torus network with different allocation shapes. We assign each application with three different shapes allocation, i.e. 3D balanced-cube, 3D unbalanced-cube, 2D mesh.
+
+3D balanced-cube, shown as red in Figure \ref{fig:cont_sub1}, can guarantee the minimum \emph{average pair-wise distance} within the allocation. There are some research work like \cite{leung} \cite{abhinav-sc13} try to prove that compact allocation can guarantee job with better performance. They use many metrics to evaluate the compactness of the allocation, such as \emph{average pair-wise distance}, \emph{diameter} and \emph{contiguity}. In this work, we select 3D balanced-cube as the most compact allocation on a 3D torus network. 
+
+3D unbalanced-cube, shown as green in Figure \ref{fig:cont_sub1}, is a rectangular prism, which is the possible allocation shape on system with asymmetric networks. For example, Blue Waters Cray XE6/XK7 system network is 3D torus with Gemini routers. The network connections in the \emph{y}direction have only half the bandwidth of the cables used in the \emph{x} and \emph{z} directions. In order to take advantage of the faster links in the \emph{x} and \emph{z} directions, job allocation is always start from X-Z plane, which leads to a rectangular prism shaped allocation \cite{RF}.
+
+2D mesh, shown as blue in Figure \ref{fig:cont_sub1}, can be cut out from a single layer of the 3D torus. 2D mesh is a very common allocation shape in torus network for both partition-based and non-contiguous allocation strategies. For example, Cray Application Level Placement Scheduler indexes the nodes in torus network into a list and make allocation by simply works off the this list \cite{carl-cug}. When the list is obtained by sorting the nodes based on their spacial coordinates in the torus, allocation made off from this list will be 2D mesh. The IBM Blue/Gene Q supercomputer Mira at Argonne Leadership Computing Facility also allow its allocation partition configured into mesh \cite{zhou-ipdps}. 
+
 \begin{figure}[t!]
     \centering
     \begin{subfigure}[t]{0.2\textwidth}
@@ -472,22 +477,11 @@ Since application's communication pattern won't change with its scale, we choose
 \end{figure}
 
 
-\subsection{Intra-Job Interference Analysis}
-\label{sec: introjob}
-
-There are lots of research works \cite{jingjin}\cite{ozan} try to come up with better task mapping algorithms to alleviate the intra-job interference, which is out the scope of our work. In this work, we focus on the analysis of such interference with different allocations. To study the intra-job interference of each job, we simulate each job running on 3D torus network with different allocation shapes. We assign each application with three different shapes allocation, i.e. 3D balanced-cube, 3D unbalanced-cube, 2D mesh.
-
-3D balanced-cube, shown as red in Figure \ref{fig:cont_sub1}, can guarantee the minimum \emph{average pair-wise distance} within the allocation. There are some research work like \cite{leung} \cite{abhinav-sc13} try to prove that compact allocation can guarantee job with better performance. They use many metrics to evaluate the compactness of the allocation, such as \emph{average pair-wise distance}, \emph{diameter} and \emph{contiguity}. In this work, we select 3D balanced-cube as the most compact allocation on a 3D torus network. 
-
-3D unbalanced-cube, shown as green in Figure \ref{fig:cont_sub1}, is a rectangular prism, which is the possible allocation shape on system with asymmetric networks. For example, Blue Waters Cray XE6/XK7 system network is 3D torus with Gemini routers. The network connections in the \emph{y}direction have only half the bandwidth of the cables used in the \emph{x} and \emph{z} directions. In order to take advantage of the faster links in the \emph{x} and \emph{z} directions, job allocation is always start from X-Z plane, which leads to a rectangular prism shaped allocation \cite{RF}.
-
-2D mesh, shown as blue in Figure \ref{fig:cont_sub1}, can be cut out from a single layer of the 3D torus. 2D mesh is a very common allocation shape in torus network for both partition-based and non-contiguous allocation strategies. For example, Cray Application Level Placement Scheduler indexes the nodes in torus network into a list and make allocation by simply works off the this list \cite{carl-cug}. When the list is obtained by sorting the nodes based on their spacial coordinates in the torus, allocation made off from this list will be 2D mesh. The IBM Blue/Gene Q supercomputer Mira at Argonne Leadership Computing Facility also allow its allocation partition configured into mesh \cite{zhou-ipdps}. 
 
 
-There are lots of research work try to design fancy allocation algorithms to provide application with most compact allocation. However, providing cubical allocation without considering application's communication pattern won't guarantee the best performance for every application. Figure \ref{fig:shapstudy-amg} shows that for AMG, who has this symmetric local communication pattern through all ranks, spent less time when assigned with 3D-unbalanced allocation than 3D-balanced. And MultiGrid gets the best performance (shortest data transfer time) when running on 3D-balanced allocation, as shown in Figure \ref{fig:shapstudy-mg}. Since MultiGrid's communication pattern is ``Many-to-Many" dominant, 3D-balanced is the most compact allocation with shortest pair-wise distance between nodes, which can reduce the aggregated hops for transferring message between ranks in MultiGrid. CrystalRouter has with both dominant local communication and multi-stage global data transfer, the 3D-balance is also the best allocation, but its advantage over 3D-unbalanced is not that obvious as to MultiGrid, as shown in Figure \ref{fig:shapstudy-cr}.
+Figure \ref{fig:shapstudy-amg} shows that for AMG, who conforms to 3D ``Nearest Neighbor" communication pattern, spent less time when being assigned with 3D-unbalanced allocation than 3D-balanced. And MultiGrid gets the best performance (shortest data transfer time) when running on 3D-balanced allocation, as shown in Figure \ref{fig:shapstudy-mg}. Since MultiGrid's communication pattern is ``Many-to-Many" dominant, 3D-balanced is the most compact allocation with shortest pair-wise distance between nodes, which can reduce the aggregated hops for transferring message between ranks in MultiGrid. CrystalRouter has with both dominant local communication and multi-stage global data transfer, the 3D-balance is also the best allocation, but its advantage over 3D-unbalanced is not that obvious as to MultiGrid, as shown in Figure \ref{fig:shapstudy-cr}.
 
-%\emph{OBSERVATION}
-Compact allocation should be provided to application with global data transfer, such as those conforms to ``Many-to-Many" communication pattern. Application with dominant communication pattern like Nearest Neighbor won't fully utilize the compact allocation and could get even better performance on a relaxed allocation shape. 
+There are lots of research work try to design fancy allocation algorithms to provide application with most compact allocation. However, providing cubical allocation without considering application's communication pattern won't guarantee the best performance for every application. Compact allocation should be provided to application with global data transfer, such as those conforms to ``Many-to-Many" communication pattern. Application with dominant communication pattern like ``Nearest Neighbor" won't fully utilize the compact allocation and could get even better performance on a relaxed allocation shape. 
 
 
 
@@ -591,12 +585,11 @@ Inter-job interference has been identified as one of the major culprits for appl
 
 We assign each application with non-contiguous allocation and run them concurrently on the same network. The allocation unit belongs to different jobs are interleaved as shown in Figure \ref{fig:noncont_sub1}. The unit size is critical to the application's performance. Figure \ref{fig: 3apps interjob study} shows the results of each application data transfer time with different allocation unit size. 
 
-The data transfer time of AMG in Figure \ref{fig:interjob-amg-box} keeps stable between allocation unit size of 16 (big) and 8 (medium), since the locality of AMG is 6-rank based. When the unit size reduce to 2 (small), AMG suffers prolong data transfer time by about 10\%. CrystalRouter is more sensitive to allocation unit size. The best unit size would be the one big enough to accommodate its 5-rank locality. Figure \ref{fig:interjob-cr-box} shows unit size of 16 and 8 can guarantee the same average data transfer time, while some rank spend more time with allocation unit size 8 than 16. When the unit size reduce to 2-node, the communication become less efficiency and take 15\% more times for transferring data. 
+The data transfer time of AMG in Figure \ref{fig:interjob-amg-box} keeps stable between allocation unit size of 16 (big) and 8 (medium), since the locality of AMG is 6-rank based. When the unit size reduce to 2 (small), AMG suffers prolong data transfer time by about 10\%. CrystalRouter is more sensitive to allocation unit size. The best unit size would be the one big enough to accommodate its local neighborhood. Figure \ref{fig:interjob-cr-box} shows unit size of 16 and 8 can guarantee the same average data transfer time, while some rank spend more time with allocation unit size 8 than 16. When the unit size reduce to 2-node, the communication become less efficiency and takes about 15\% more times for transferring data. 
 
-The data transfer time of MultiGrid with different allocation unit sizes doesn't show obvious variability in Figure \ref{fig:interjob-mg-box}. This is because even big allocation unit size like 16 will still fail to preserve MultiGrid's ``Many-to-Many" pattern. The data transfer time is almost doubled when MultiGrid running concurrently with allocation unit size of 16, as shown in Figure \ref{fig:interjob-mg-box} . As the unit size decreases, the data transfer time keep growing, but in a slow way, which means in terms of preserving the locality of MultiGrid, allocation unit of size 16, 8 and 2 serve equally bad.
+The data transfer time of MultiGrid with different allocation unit sizes doesn't show obvious variability in Figure \ref{fig:interjob-mg-box}. This is because even big allocation unit size like 16-node will still fail to preserve MultiGrid's ``Many-to-Many" pattern. The data transfer time is almost doubled when MultiGrid running concurrently with allocation unit size of 16, as shown in Figure \ref{fig:interjob-mg-box} . As the unit size decreases, the data transfer time keep growing, but in a slow way, which means in terms of preserving the locality of MultiGrid, allocation unit of size 16, 8 and 2 serve equally bad.
 
-%\emph{OBSERVATION}
-The unit size in non-contiguous allocation policy should be chosen according to application's communication pattern. Inter-job interference is inevitable in non-contiguous based systems, but unit size that big enough to preserve the locality of the application will alleviate such interference and improve job performance. 
+The unit size in non-contiguous allocation policy should be chosen according to application's communication pattern. Inter-job interference is inevitable in non-contiguous based systems, but unit size that big enough to preserve the neighborhood communication of the application will alleviate such interference and improve job performance. 
 
 
 
@@ -621,18 +614,18 @@ The unit size in non-contiguous allocation policy should be chosen according to 
         \caption{MultiGrid}
         \label{fig:interjob-mg-box}
     \end{subfigure}%
-   \caption{Inter-job interference study. ``cont" indicates three applications running side by side concurrently on the same network with contiguous allocation. To study the impact of non-contiguous allocation, applications running concurrently with interleaved allocation of different unit sizes, which are 16-node, 8-node, 2-node. }
+   \caption{Inter-job interference study. ``cont" indicates three applications running side by side concurrently on the same network with contiguous allocation. To study the impact of non-contiguous allocation on inter-job interference, applications running concurrently with interleaved allocation of different unit sizes, which are 16-node, 8-node, 2-node. }
    \label{fig: 3apps interjob study}
 \end{figure*}
 
 \subsection{Summary}
 \label{sec:summary}
 
-Based on our comprehensive study, we can get observations that 
+Based on our comprehensive study, we can get following observations 
 \begin{enumerate}
     \item The compact allocation may not guarantee the best performance for every application. 
-    \item The performance of application conforms to Nearest Neighbor communication pattern keep relatively stable with different shape allocations, while application conforms to ``Many-to-Many" communication pattern prefer compact allocation. 
-    \item The allocation unit size should be decided according to application's communication pattern. Unit size that big enough to preserve the locality of the application will result better performance. 
+    \item The performance of application conforms to Nearest Neighbor communication pattern keeps relatively stable with different shape allocations, while application conforms to ``Many-to-Many" communication pattern prefers compact allocation. 
+    \item The allocation unit size should be decided according to application's communication pattern. Unit size that big enough to preserve the neighborhood communication of the application will result in better performance. 
 \end{enumerate}
 
 
@@ -641,14 +634,16 @@ Based on our comprehensive study, we can get observations that
 \section{Discussion}
 \label{sec:discussion}
 
-HPC system usually accommodate many parallel jobs running concurrently. Each job gets the required number of computing nodes by system resource manager. The allocated nodes for each job communicate with each other through system interconnect network in a sharing way, which cause interference as a negative side-effect. This interference can introduce performance degradation to both job and system, such as prolonged job running time and reduced system throughput. 
+%HPC system usually accommodate many parallel jobs running concurrently. Each job gets the required number of computing nodes by system resource manager. The allocated nodes for each job communicate with each other through system interconnect network in a sharing way, which cause interference as a negative side-effect. This interference can introduce performance degradation to both job and system, such as prolonged job running time and reduced system throughput.
+ 
+The observations we obtained by analyzing the intra- and inter-job interference can provide insights for the design of a smart and flexible job allocation strategy. By scrutinizing job's communication behavior, we can identify job's dominant communication pattern and pinpoint the ``neighborhood communication". With such knowledge about jobs' communication patterns, we can analyze the possible interference between jobs and take precautions to alleviate the negative effect when making allocation decisions. 
 
-The knowledge about HPC job's interference is extremely useful for improving system and job's performance. By scrutinizing job's communication behavior, we can locate the critical path with job's communication graph, identify  job's dominant communication pattern. With such knowledge about job's communication characteristics, we can analysis the possible interference between jobs through simulation or even predict such interference when job running on different allocations. 
+When an application with dominant communication that is intensive ``Many-to-Many" being submitted to the system, it should be granted with compact node allocation and exclusive network provision. The compact allocation can guarantee the shortest pair-wise distance between all the ranks, and make the data transfer between ranks take less hops. On the other hand, the exclusive network provision will prevent other adjacent applications from sharing network resources, thus eliminate the performance degradation due to interference.
 
-The most promising way to utilize such knowledge is to make smart allocation based on job's dominant communication pattern. Most existing batch schedulers take so few initiative because it fixed-size partition-based or non-contiguous policy, which means it chooses the benefit of either system or job over the other. Some proposed compromised policies \cite{lo}\cite{pascual}\cite{yang-cluster14} to use various allocation unit sizes, but they still  make the allocation for job blindly without knowing job's communication information. 
+Not every application's preferable resource are compact node allocation and exclusive network provision. As we found in our comprehensive analysis, applications whose dominant communication patterns contain intensive ``neighborhood communication" like ``Nearest Neighbor" won't benefit from compact node allocation and exclusive network provision. Such applications can run with non-contiguous node allocation without performance degradation, as long as the allocation unit can accommodate the ``neighborhood communication".
 
+The allocation unit size shouldn't be fixed. Instead, the new allocation strategy should choose the proper unit size based on the scale of ``neighborhood communication" of each job. The best unit size should be neither too big nor too small, jut perfectly fit for the size of that ``neighborhood". Big unit size won't be fully utilized and results in fragmentation. Small unit size won't be able to accommodate the ``neighborhood communication" and makes the intra-job communication less efficient. 
 
-Based on the findings in this work, we propose the idea of smart job allocation with consideration about job's communication pattern. As the dominant communication pattern of parallel applications on HPC system can be summarized into a couple of categories, the deep understanding of one application can be helpful to all other applications that conforms to the same communication pattern. When an application with dominant communication that is intensive all-to-all being submitted to the system, it should be granted with compact allocation with exclusive network provision, so that it won't suffer performance loss due to interference. If job with dominant communication pattern like Nearest Neighbor or others with intensive small scale communication, rather than assign it with unnecessary compact allocation and exclusive network provision, non-contiguous allocation with proper unit size would serve it equally well. No degradation will be introduced to job's performance and system utilization will be improved. 
 
 The advantage of making allocation with consideration about job's communication pattern is obvious. First, compared with partition-based policy, the new allocation strategy is more flexible, it doesn't require the system to provide a big partition that can accommodate the whole application, just small set of compact nodes enough for all the "local community" in the application. On the other hand, the new allocation strategy won't destroy the locality of application's communication pattern. On the contrary, the small compact node set (allocation unit) provided for the application's  ``local communities"  will preserve the communication locality in the maximum extent.
 
@@ -694,267 +689,8 @@ We believe that our finding in this work can provide guidance for HPC resource m
 \label{sec: ack}
 The work at Illinois Institute of Technology is supported in part by U.S. National Science Foundation grants CNS-1320125 and CCF-1422009. This work is also supported by the U.S. Department of Energy, Office of Science, Advanced Scientific Computing Research, under Contract DE-AC02-06CH11357.
 
-
-\begin{thebibliography}{10}
- %=====start of scheduling papers===== 
-
-%\bibitem{yang-sc13}
-%X. ~Yang, Z.~Zhou, S.~Wallace Z.~Lan, W.~Tang, S. ~Coghlan and Mike. ~Papka.
-%\newblock Integrating Dynamic Pricing of Electricity into Energy Aware Scheduling for HPC Systems. 
-%\newblock In {Proceedings of the International Conference on High Performance Computing, Networking, Storage and Analysis(SC), 2013 International Conference for}
-%\newblock SC '13,
-%\newblock 2013,
-%\newblock Salt Lake City, Utah
-
-%=====start of allocation aware papers===== 
-\bibitem{leung}
-V.J. Leung,  E.M. Arkin, M.A. Bender,  D. Bunde, J. Johnston, etc,
-\newblock Processor allocation on Cplant: achieving general processor locality using one-dimensional allocation strategies
-\newblock In {Proceedings of 2002 IEEE International Conference on Cluster Computing, 2002}.  pages 296--304, 2002
-
-\bibitem{carl-cug}
-Carl Albing and Mark Baker
-\newblock ALPS,Topology, and Performance: A Comparison of Linear Orderings for 
-Application Placement in a 3D torus.
-\newblock Presented at the CUG 2010, Edinburgh, Scotland, UK, 2010.
-
-\bibitem{yang-cluster14}
-Xu Yang and Zhou Zhou and Wei Tang and Xingwu Zheng and Jia Wang and Zhiling Lan.
-\newblock Cluster Computing (CLUSTER), 2014 IEEE International Conference on,
-\newblock Balancing job performance with system performance via locality-aware scheduling on torus-connected systems
-\newblock Sept, 2014,
-\newblock pp.140-148
-
-\bibitem{lo}
-V. Lo,  K. Windisch, W.  Liu, and Nitzberg.
-\newblock Noncontiguous processor allocation algorithms for mesh-connected multicomputers.
-\newblock IEEE Transactions on Parallel and Distributed Systems 8 (1997). pages 712--726
-
-\bibitem{pascual} 
-JA. Pascual, J. Navaridas and  J. Miguel-Alonso. 
-\newblock Effects of Topology-Aware Allocation Policies on Scheduling Performance. 
-\newblock 14th Workshop on Job Scheduling Strategies for Parallel Processing. May 29, 2009.Rome, Italy.
-
-
-%+++++++++++++++++++++++
-\bibitem{mpip}
-\newblock mpiP: Lightweight, Scalable MPI Profiling.
-\newblock http://mpip.sourceforge.net, 
-\newblock 2013.
-
-\bibitem{tau}
-S. Shende and A. Malony. 
-\newblock The TAU parallel performance system. 
-\newblock International Journal of High Performance Computing Applications, 20(2):287–311, 2006.
-
-\bibitem{scala}
-X. Wu, F. Mueller, S. Pakin, 
-\newblock "Automatic Generation of Executable Communication Specifications from Parallel Applications", 
-\newblock In {Proceedings of the International Conference on High Performance Computing, Networking, Storage and Analysis(SC), 2011 International Conference for}
-\newblock SC '11,
-\newblock 2011,pages 12-21.
-
-\bibitem{design forward webpage}
-Department of Energy, “Characterization of the DOE Mini-apps.” [Online].
-\newblock Available: http://portal.nersc.gov/project/CAL/trace.htm
-\newblock (Accessed on: Sept 16th. 2015)
-
-
-\bibitem{coral}
-CORAL collaboration benchmark codes [Online].
-\newblock Available:https://asc.llnl.gov/CORAL-benchmarks/
-\newblock (Accessed on: Sept 16th. 2015)
-
-\bibitem{ipm}
-David Skinner, Nicholas Wright, Karl Fuerlinger and Kathy Yelick
-\newblock Integrated Performance Montoring(IPM)
-\newblock Available http://ipm-hpc.sourceforge.net/overview.html
-\newblock (Accessed on: Sept 16th. 2015)
-
-
-\bibitem{miniapp}
-Bronson Messer
-\newblock "Using a Developing MiniApp to Compare Platform Characteristics on Cray Systems"
-\newblock In Proceedings of Cray User Group 2012
-
-\bibitem{amg}
-V. E. Henson and U. M. Yang, 
-\newblock "BoomerAMG: A Parallel Algebraic Multigrid Solver and Preconditioner",
-\newblock Appl. Num. Math. 41 (2002), pp. 155-177. UCRL-JC-141495.
-
-\bibitem{crystalrouter}
-P. Fischer, J. Lottes, D. Pointer, and A. Siegel, 
-\newblock “Petascale algorithms for reactor hydrodynamics,”
-\newblock Journal of Physics: Conference Series, vol. 125, no. 1, p. 012076, 2008.
-
-%+++++++++++++++++
-
-%=====start of network papers===== 
-\bibitem{rosenthal}
-E. Rosenthal and E.A. Leon
-\newblock Characterizing Application Sensitivity to Network Performance.
-\newblock  In {Proceedings of SC14: International
-Conference for High Performance Computing, Networking, Storage and Analysis},
-2014
-
-\bibitem{hoefler-modeling}
-T. Hoefler and W. Gropp and M. Snir and W. Kramer
-\newblock Performance Modeling for Systematic Performance Tuning,
-\newblock 2011
-\newblock Nov.
-\newblock In {Proceedings of International Conference for High Performance Computing, Networking, Storage and Analysis (SC'11), SotP Session,
-}
-
-\bibitem{roth}
-P. Roth and J. Meredith and J. Vetter,
-\newblock "Automated Characterization of Parallel Application Communication Patterns",
-In Proceedings of the 25rd International Symposium on High-performance Parallel and Distributed Computing
-\newblock HPDC '15,
-\newblock 2015,
-
-
-%=====end of application/mapping papers===== 
-
-\bibitem{RF}
-Fiedler, Robert, and Stephen Whalen. 
-\newblock "Improving task placement for applications with 2D, 3D, and 4D virtual Cartesian topologies on 3D torus networks with service nodes." 
-\newblock Proc. Cray User’s Group (2013).
-
-\bibitem{abhinav-sc13} 
-Bhatele, Abhinav and Mohror, Kathryn and Langer, Steven
-H. and Isaacs, Katherine E. 
-\newblock There Goes the Neighborhood: Performance Degradation Due to Nearby Jobs 
-\newblock In {Proceedings of SC13: International
-Conference for High Performance Computing, Networking, Storage and Analysis},
-2013
-
-\bibitem{jose-ipdps15}
-Jokanovic, A.; Sancho, J.C.; Rodriguez, G.; Lucero, A.; Minkenberg, C.; Labarta, J.,
-\newblock "Quiet Neighborhoods: Key to Protect Job Performance Predictability," 
-\newblock in Parallel and Distributed Processing Symposium (IPDPS), 
-\newblock 2015 IEEE International , vol., no., pp.449-459, 25-29 May 2015
-
-\bibitem{skinner}
-D. Skinner and W. Kramer. 
-\newblock Understanding the Causes of Performance Variability in HPC Workloads. 
-\newblock In Proceedings of the IEEE International Workload Characterization Symposium, 
-\newblock 2005, pages 137–149, 2005.
-
-%\bibitem{hpdc14}
-%Prisacari, Bogdan and Rodriguez, German and Heidelberger, Philip and Chen, Dong and Minkenberg, Cyriel and Hoefler, Torsten
-%\newblock Efficient Task Placement and Routing of Nearest Neighbor Exchanges in Dragonfly Networks
-%\newblock In Proceedings of the 23rd International Symposium on High-performance Parallel and Distributed Computing
-%\newblock HPDC '14,
-%\newblock 2014,
-%\newblock Vancouver, BC, Canada
-
-\bibitem{jingjin}
-Wu, Jingjin and Lan, Zhiling and Xiong, Xuanxing and Gnedin, Nickolay Y. and Kravtsov, Andrey V.
-\newblock Hierarchical Task Mapping of Cell-based AMR Cosmology Simulations
-\newblock Proceedings of the International Conference on High Performance Computing, Networking, Storage and Analysis
-\newblock SC '12,
-\newblock 2012,
-\newblock Salt Lake City, Utah
-
-\bibitem{ozan}
-Tuncer, Ozan, Vitus J Leung, Ayse K. Coskun,
-\newblock "PaCMap: Topology Mapping of Unstructured Communication Patterns onto Non-contiguous Allocations," 
-\newblock 29th International Conference on Supercomputing, June 2015.
-
-
-\bibitem{zhou-ipdps}
-Z. Zhou, X. Yang, Z. Lan, P. Rich, W. Tang, V. Morozov, and N. Desai.
-\newblock Improving Batch Scheduling on Blue Gene/Q by Relaxing 5D Torus Network Allocation Constraints,
-\newblock Proceedings of 29th IEEE International Parallel \& Distributed Processing 
-Symposium,
-\newblock IPDPS'15, 2015.
-\newblock Hyderabad, INDIA
-
-\bibitem{Bogdan-hpdc14}
-Prisacari, Bogdan and Rodriguez, German and Heidelberger, Philip and Chen, Dong and Minkenberg, Cyriel and Hoefler, Torsten
-\newblock Efficient Task Placement and Routing of Nearest Neighbor Exchanges in Dragonfly Networks,
-\newblock Proceedings of the 23rd International Symposium on High-performance Parallel and Distributed Computing,
-\newblock HPDC '14,
-\newblock 2014,
-\newblock  Vancouver, BC, Canada,
-
-
-\bibitem{oxbow}
-J. S. Vetter, S. Lee, D. Li, G. Marin, C. McCurdy, J. Meredith, P. C. Roth, and K. Spafford. 
-\newblock Quantifying architectural requirements of contemporary extreme-scale scientific applications. 
-\newblock In International Workshop on Performance Modeling, Benchmarking and Simulation of HPC Systems (PMBS13), 
-\newblock Denver, Colorado, 2013.
-
-\bibitem{Dong-SC11}
-Dong Chen; Eisley, N.A.; Heidelberger, P.; Senger, R.M.; Sugawara, Y.; Kumar,
-S.; Salapura, V.; Satterfield, D.L.; Steinmacher-Burow, B.; Parker, J.J., 
-\newblock "The IBM Blue Gene/Q interconnection network and message unit," 
-\newblock High Performance Computing, Networking, Storage and Analysis (SC), 2011 International 
-Conference,
-\newblock pp.1,10, 
-\newblock 12-18 Nov. 2011
-
-\bibitem{Jason-2011}
-Jason Cope, Ning Liu, Sam Lang, Phil Carns, Chris Carothers, Robert Ross.
-\newblock CODES: Enabling Co-design of Multilayer Exascale Storage Architectures, 
-\newblock Proceedings of the Workshop on Emerging Supercomputing Technologies 2011, pp. 303-312
-\newblock 2011
-
-
-%===simulation papers =====
-
-\bibitem{ross}
-P. D. Barnes, C. D. Carothers, D. R. Jefferson, and J. M. LaPre, 
-\newblock “Warp speed: executing time warp on 1,966,080 cores,”
-\newblock in Proc. of the 2013 ACM SIGSIM Conf. on Principles of Advanced Discrete Simulation (PADS),
-\newblock May 2013, pp. 327–336.
-
-\bibitem{mubarak-sc2012}
-Mubarak, M.; Carothers, C.D.; Ross, R.; Carns, P.,
-\newblock "Modeling a Million-Node Dragonfly Network Using Massively Parallel Discrete-Event Simulation," 
-\newblock High Performance Computing, Networking, Storage and Analysis (SCC), 
-\newblock 2012 SC Companion: 
-\newblock pp.366,376, 10-16 Nov. 2012
-
-\bibitem{codes-torus}
-Mubarak, Misbah, et al.
-\newblock "A case study in using massively parallel simulation for extreme-scale torus network codesign." 
-\newblock in Proceedings of the 2nd ACM SIGSIM/PADS conference on Principles of advanced discrete simulation. 
-\newblock ACM, 2014.
-
-\bibitem{bgq}
-C. Dong, N. Eisley, P. Heidelberger, R. Senger, Y. Sugawara, S. Kumar, V. Salapura, D. Satterfield, B. Steinmacher-Burow, and J. Parker, 
-\newblock “The IBM Blue Gene/Q interconnection fabric,” 
-\newblock Micro, IEEE, vol. 32, no. 1, pp. 32–43, 2012.
-
-\bibitem{tofu}
-Y. Ajima, Y. Takagi, T. Inoue, S. Hiramoto, and T. Shimizu, 
-\newblock “The Tofu Interconnect,” 
-\newblock in 2011 IEEE 19th Annual Symposium on High Performance Interconnects (HOTI), 2011, pp. 87–94.
-
-\bibitem{titan}
-Titan System Overview [online]
-\newblock Available: https://www.olcf.ornl.gov/kbarticles/titan-system-overview
-\newblock (Accessed on: OCT 4th, 2015)
-
-
-\bibitem{sst}
-Sandia National Labs, “SST DUMPI trace library.” [Online].
-\newblock Available: http://sst.sandia.gov/using dumpi.html 
-\newblock (Accessed on: Sept 3rd, 2015)
-
-\bibitem{simgrid}
-SIMGRID Versatile Simulation of Distributed Systems [Online].
-\newblock Availabale: http://simgrid.gforge.inria.fr
-\newblock (Accessed on: Oct 4th, 2015)
-
-\bibitem{top500}
-“Top500 supercomputing web site.” [Online]. 
-\newblock Available: http://www.top500.org
-\newblock (Accessed on: Oct 4th, 2015)
-
-
-\end{thebibliography}
+\bibliographystyle{abbrv}
+\bibliography{./reference}  
 
 
 \vspace{5\baselineskip}
