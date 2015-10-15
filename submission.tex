@@ -456,23 +456,35 @@ There are lots of research works \cite{jingjin}\cite{ozan} try to come up with b
 
 2D mesh, shown as blue in Figure \ref{fig:cont_sub1}, can be cut out from a single layer of the 3D torus. 2D mesh is a very common allocation shape in torus network for both contiguous and non-contiguous allocation strategies. For example, Cray Application Level Placement Scheduler indexes the nodes in torus network into a list and make allocation by simply works off the this list \cite{carl-cug}. When the list is obtained by sorting the nodes based on their spacial coordinates in the torus, allocation made off from this list will be 2D mesh. The IBM Blue/Gene Q supercomputer Mira at Argonne Leadership Computing Facility also allow its allocation partition configured into mesh \cite{zhou-ipdps}. 
 
-\begin{figure}[t!]
+\begin{figure*}[t!]
     \centering
     \begin{subfigure}[t]{0.2\textwidth}
         \centering
-        \includegraphics[height=1.2in]{figs/cont/allocation}
+        \includegraphics[height=1.2in]{figs/allocshape/allocation}
         \caption{ }
         \label{fig:cont_sub1}
     \end{subfigure}%
     \hspace{1em}%
     \begin{subfigure}[t]{0.2\textwidth}
         \centering
-        \includegraphics[height=1.2in]{figs/inter-job/noncont/sharing}
+        \includegraphics[height=1.2in]{figs/allocshape/unitsize/unit16}
         \caption{ }
         \label{fig:noncont_sub1}
     \end{subfigure}%
-    \caption{(a) Illustrates the contiguous allocation for 64-node job in three different shapes. ``Blue" is 2D mesh, ``Green" is 3D-unbalanced cube and ``Red" is 3D-balanced cube. (b) Illustrates the non-contiguous allocation. Each job is represented by a specific color. The nodes assigned to different jobs are interleaved, the allocation unit is 4-node.}
-\end{figure}
+    \begin{subfigure}[t]{0.2\textwidth}
+        \centering
+        \includegraphics[height=1.2in]{figs/allocshape/unitsize/unit8}
+        \caption{ }
+        \label{fig:noncont_sub2}
+    \end{subfigure}%
+    \begin{subfigure}[t]{0.2\textwidth}
+        \centering
+        \includegraphics[height=1.2in]{figs/allocshape/unitsize/unit2}
+        \caption{ }
+        \label{fig:noncont_sub3}
+    \end{subfigure}%
+    \caption{(a) Contiguous allocation for 64-node job in three different shapes. ``Blue" is 2D mesh, ``Green" is 3D-unbalanced cube and ``Red" is 3D-balanced cube. (b)-(d) Non-contiguous allocation. Each job is represented by a specific color. The nodes assigned to different jobs are interleaved, the size of allocation unit are 16, 8 and 2.}
+\end{figure*}
 
 
 
