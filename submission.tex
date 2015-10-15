@@ -64,7 +64,7 @@ Network contention between concurrently running jobs on HPC system is one of the
 \section{Introduction} 
 \label{sec: intro}
 
-The scale of supercomputers keeps growing to accommodate the the demand for computing power required by scientific research areas. Supercomputers have hundreds of thousands of nodes, and serve as irreplaceable research vehicle for scientific problems with increasing size and complexity. Supercomputers are usually employed as a shared resource to accommodate many parallel applications (also known as jobs) running concurrently \cite{zhou-ipdps} and maintain high system utilization. These communication and I/O intensive jobs share the system infrastructure such as network and I/O bandwidth, and inevitably there is contention over these shared resources. As supercomputers continue to evolve, these shared resources are increasingly the bottleneck for performance.
+The scale of supercomputers keeps growing to accommodate the the demand for computing power required by scientific research areas. Supercomputers have hundreds of thousands of nodes, and serve as irreplaceable research vehicle for scientific problems with increasing size and complexity. Supercomputers are usually employed as a shared resource to accommodate many parallel applications (also known as jobs) running concurrently \cite{zhou-ipdps}. To be effective, they must maintain high system utilization. These communication and I/O intensive jobs share the system infrastructure such as network and I/O bandwidth, and inevitably there is contention over these shared resources. As supercomputers continue to evolve, these shared resources are increasingly the bottleneck for performance.
 
 
 \begin{figure}[h!]
@@ -94,7 +94,7 @@ We envision that future HPC will adopt a flexible job allocation mechanism which
 
 In this work, we focus on an in-depth analysis of intra- and inter-job communication interferences with  different job allocations on torus-connected HPC systems. Torus networks have been extensively used in the current generation of supercomputers because of their good scalability and competitive communication performance. On the recent Top500 list, 6 of the top 10 supercomputers use a high-radix torus-interconnected network \cite{top500}. The current generation of IBM Blue Gene/Q (BG/Q) supercomputer, such as Mira at Argonne Nation Laboratory and Sequoia at  Lawrence Livermore National Laboratory, has its nodes connected in a 5D torus network \cite{bgq}. The K computer from Japan uses the ``Tofu” system, which is a 6D mesh/torus topology \cite{tofu}. Titan, a Cray XK7 supercomputer located at the Oak Ridge Leadership Computing Facility (OLCF), has nodes connected in a 3D torus within the compute partition \cite{titan}. Although the analysis are based on torus network, the idea conveyed from this work is applicable to networks with different topologies. 
 
-We selected three signature applications from DOE Design Forward Project\cite{designforwardwebpage} as examples to conduct detailed study about their communication patterns. We use a sophisticated simulation toolkit named CODES, Co-Design of Multi-layer Exascale Storage Architecture\cite{Jason-2011}, from Argonne National Laboratory as a research vehicle to evaluate the performance of these applications with various allocations. We analyze the intra- and inter-job interference by simulating these applications running exclusively and concurrently with different allocations. The major finds and insights of this work are the following:
+We selected three signature applications from DOE Design Forward Project\cite{designforwardwebpage} as examples to conduct detailed study about their communication patterns. We use a sophisticated simulation toolkit named CODES, Co-Design of Multi-layer Exascale Storage Architecture\cite{Jason-2011} from Argonne National Laboratory, as a research vehicle to evaluate the performance of these applications with various allocations. We analyze the intra- and inter-job interference by simulating these applications running exclusively and concurrently with different allocations. The major finds and insights of this work are the following:
 
 \begin{itemize}
     \item We study the communication behaviors and identify the communication patterns of three representative HPC applications.
@@ -150,7 +150,7 @@ Figure \ref{fig: amg communication topology} shows the communication topology of
 
 Figure \ref{fig: amg data trans} shows the amount of data each rank transferred in AMG. The red line shows the amount of data sent by each rank, the blue line shows the amount of received data. The data transferring of each rank is between 7MB to 16MB.
 
-AMG represents a group of applications whose dominant communication pattern is Nearest Neighbor. Applications with such similar dominant communication pattern are like PARTISN, SNAP \cite{designforwardwebpage}.
+AMG represents a group of applications whose dominant communication pattern is Nearest Neighbor. Applications with such similar dominant communication pattern are like PARTISN\cite{designforwardwebpage} and SNAP \cite{designforwardwebpage}.
 
 
 \subsection{Crystal Router}
