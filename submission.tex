@@ -312,16 +312,12 @@ A simulation toolkit named CODES enables the exploration of simulating different
 %We implemented a Job Mapping API for CODES, which can provide flexible job allocation strategies. The new API can help us to explore the impact of different allocation strategies to those three applications in Section \ref{sec:application study}
 
 
-\section{Configuration Study }
+\section{Configuration Study}
 \label{sec:config study}
 
-In this section, we study the communication behavior of three applications on torus network with different dimensionality and bandwidth configurations.
+In this section, we study the communication behavior of three applications on torus networks with different dimensionality and bandwidth configurations. Torus networks are $k$-ary $n$-cubes, with $k^{n}$ nodes in total arranged in an $n$-dimensional grid having $k$ nodes in each dimension. Each node has $2\times n$ direct linked neighbor nodes with wraparound. In these and all following experiments, non-adaptive routing is used. While making specific recommendations as to an ``optimal'' network configuration for a given application is out of the scope of this study, the experiments do highlight the nuances inherent in design choices such as network diameter and bandwidth planning.
 
-The topology of torus network is k-ary n-cube, with $k^n$ nodes in total arranged in an n-dimensional grid having k nodes in each dimension. Each node has 2$\times$n direct linked neighbor nodes. The torus network performance is determined by its dimensionality and link bandwidth. As the increase of the dimensionality of torus network, so does the number of links connected with each node. The increased aggregated bandwidth of each node will definitely reduce the data transfer time of each rank in the application. Figure \ref{fig:dimensionality-study} shows the performance of the AMG, CrystalRouter and MultiGrid on a 2K node torus network model with a 3D torus (16$\times$16$\times$8), a 5D torus (8$\times$4$\times$4$\times$4$\times$4), and a 7D torus (4$\times$4$\times$4$\times$4$\times$2$\times$2$\times$2). The bandwidth of direct link between nodes is 2GiB/s in each direction \cite{bgq}, thus, the aggregated bandwidth is 12GiB/s per node in 3D torus, 20GiB/s per node in 5D torus, and 28GiB/s per node in 7D torus.
-
- 
-We can see from Figure \ref{fig:dimensionality-study} that the data transfer time of those three applications are greatly reduced as the dimensionality increases. The increased aggregated bandwidth of each node can accelerate the data transfer. We allocate each rank within each application linearly on the 3D torus. However, due to the variance of data transfer volume of each rank, AMG's data transfer time has great dispersion, shown as the outliers above the boxes in Figure \ref{fig:dimen-amg}. There is few dispersion of MultiGrid, shown in Figure \ref{fig:dimen-mg}, since data transfer of each rank in MultiGrid varies slightly  between 2.8MB to 2.9MB. CrystalRouter also has few dispersion as shown in Figure \ref{fig:dimen-cr}, this is due to the majority of data transferring is in the local neighborhood, which only take few hops. 
-
+We perform three sets of experiments. Each looks at per-rank distribution of performance of AMG, CrystalRouter and MultiGrid on a set of 2048-node torus models, one with $n=3$ ($16^{2} \times 8$), one with $n=5$ ($8\times 4^{4}$), and one with $n=7$ ($4^{4} \times 2^{3}$). Performance in this context is defined by the total message transfer time for each sending rank, which we are able to precisely measure due to the simulation environment providing us with an absolute notion of time. Note that we simply perform linear rank assignment, one per node -- later sections investigate rank and node mapping effects. In the first, shown in Figure~\ref{fig:dimensionality-study}, we keep the link bandwidth constant at 2GiB/s in each direction, corresponding to Blue Gene/Q systems~\cite{bgq}, leading to aggregate node bandwidths of 12GiB/s, 20GiB/s, and 28GiB/s for the 3D, 5D, and 7D tori, respectively. In the second, shown in Figure~\ref{fig:bandwidth-study}, we fix the torus dimensionality to 5D. In the third, shown in Figure~\ref{fig: bandwidth-time-box}, we instead fix the per-node aggregate bandwidth (and thus the system aggregate bandwidth) and modify the torus dimensionality, resulting in per-link bandwidths shown in Table~\ref{tab: fix-bandwidth}.
 
 \begin{figure*}[t!]
     \centering
@@ -344,12 +340,11 @@ We can see from Figure \ref{fig:dimensionality-study} that the data transfer tim
         \caption{MultiGrid}
         \label{fig:dimen-mg}
     \end{subfigure}%
-   \caption{Data Transfer Time of AMG, CrystalRouter and MultiGrid on 3D, 5D and 7D torus network. The network bandwidth increases as the dimensionality grows. Due to the data volume sent/received by each rank greatly varies, there is great dispersion of AMG's data transfer time, shown as outliers above the boxes in Figure \ref{fig:dimen-amg}.}
+   \caption{Data Transfer Time of AMG, CrystalRouter and MultiGrid on 3D, 5D and 7D torus network, with constant per-link bandwidth.}
    \label{fig:dimensionality-study}
 \end{figure*}
 
-
-Then we use fixed dimensionality to study the impact of increased bandwidth. We run these three applications on 5D torus with direct link bandwidth increases from 2GiB/s, to 4GiB/s and 8GiB/s. As shown in Figure \ref{fig:bandwidth-study}, the data transfer time of each application can be greatly reduced as the bandwidth increases. 
+In the fixed link bandwidth experiment, shown in Figure~\ref{fig:dimensionality-study}, the data transfer time of the three applications are significantly reduced as the dimensionality increases, so the applications can easily make use of the increased dimensionality (lower hops on average) and/or aggregate bandwidth (more links being concurrently used). Interestingly, AMG has the greatest degree of outliers compared to the others. We expect this to be a combination of non-optimal rank mappings causing a greater degree of variance due to the highly regular communication pattern and the distribution of message sizes. MultiGrid seems to benefit the most in terms of reducing the spread of the time distribution, though the median message time remains roughly within a factor of two. The time distribution in CrystalRouter seems to accrue the most benefits, likely due to the combination of cross-cutting and localized per-rank traffic.
 
 \begin{figure*}[t!]
     \centering
@@ -376,37 +371,7 @@ Then we use fixed dimensionality to study the impact of increased bandwidth. We 
    \label{fig:bandwidth-study}
 \end{figure*}
 
-We also study the impact of dimensionality with fixed aggregated bandwidth. We use 3D, 5D and 7D torus network with the same per-node aggregated bandwidth, which is 28Gb/s. With the same aggregated bandwidth, higher dimensionality means shorter diameter and pair-wise distance between nodes. The bandwidth between nodes in each torus network are shown in Table \ref{tab: fix-bandwidth}
-
-\begin{table}[ht]
-\begin{center}
-\caption{Torus networks with same aggregated bandwidth} 
-\label{tab: fix-bandwidth}
-\begin{tabular}{l c c c} 
-\toprule % Top horizontal line
-\toprule
-&\multicolumn{3}{c}{Bandwidth } \\
-\cmidrule(l){2-4}
-Dimension  & direct & aggregate &\\ % Column names row
-\midrule % In-table horizontal line
-3D      & 4.67Gb/s  & 28Gb/s  & \\  % Content row 1
-\midrule % In-table horizontal line
-5D    & 2.8Gb/s  & 28Gb/s  &\\ % Content row 1
-\midrule % In-table horizontal line
-7D    & 2Gb/s & 28Gb/s & \\
-\midrule
-\bottomrule % Bottom horizontal line
-\end{tabular}
-\end{center}
-\end{table}
-
-As we see from Figure \ref{fig:samebd-amg}, the quartiles of ``3D" box is a little bit higher (1\%) than that of ``5D", which means increasing dimensionality from 3D to 5D has little improvement on the average data transfer time for AMG.  However, there is obvious reduction in those outliers between 3D and 5D. When dimensionality increases up to 7D, the improvement in terms of average data transfer time is still small, but more outliers above the top whisker can be spotted. 
-
-The performance of CrystalRouter actually deteriorate as the torus dimensionality increasing, shown in Figure \ref{fig:samebd-cr}. This is due to the direct link bandwidth reduces from 4.67Gb/s to 2Gb/s, as dimension increases from 3D to 7D. CrystalRouter's large amount of intensive local data transfer benefit more from higher direct link bandwidth than its global transfer from lower diameter and shorter pair-wise distance between nodes. 
-
-The performance of MultiGrid is gradually improved as the dimensionality of torus network increases, shown in Figure \ref{fig:samebd-mg}. The reduced diameter and shorten pair-wise distance between nodes would make the ``Many-to-Many" global data transfer in MultiGrid more efficient. 
-
-We can get the observation that higher dimensionality of torus network would improve the performance of application with ``Many-to-Many" communication patterns, while application with intensive local communication like ``Nearest Neighbor" won't benefit much from higher dimensionality. 
+In the fixed dimensionality experiment, shown in Figure~\ref{fig:bandwidth-study}, the increased per-link bandwidth, expectedly, benefits each application roughly equally, reducing the time distributions linearly.
 
 \begin{figure*}[t!]
     \centering
@@ -433,6 +398,45 @@ We can get the observation that higher dimensionality of torus network would imp
    \label{fig: bandwidth-time-box}
 \end{figure*}
 
+\begin{table}[ht]
+\begin{center}
+\caption{Torus networks with same aggregated bandwidth} 
+\label{tab: fix-bandwidth}
+\begin{tabular}{l c c c} 
+\toprule % Top horizontal line
+\toprule
+&\multicolumn{3}{c}{Bandwidth } \\
+\cmidrule(l){2-4}
+Dimension  & direct & aggregate &\\ % Column names row
+\midrule % In-table horizontal line
+3D      & 4.67Gb/s  & 28Gb/s  & \\  % Content row 1
+\midrule % In-table horizontal line
+5D    & 2.8Gb/s  & 28Gb/s  &\\ % Content row 1
+\midrule % In-table horizontal line
+7D    & 2Gb/s & 28Gb/s & \\
+\midrule
+\bottomrule % Bottom horizontal line
+\end{tabular}
+\end{center}
+\end{table}
+
+In the fixed aggregate bandwidth experiment, with configuration in Table~\ref{tab: fix-bandwidth} and results shown in Figure~\ref{fig: bandwidth-time-box}, the results are more nuanced. At least for these applications, the benefits from increased dimensionality do not outweigh the reduction in per-link bandwidth. Multigrid does see benefits in the increased dimensionality, particularly with respect to outliers, but has a similar median message time. CrystalRouter reduces performance as the dimensionality increases, but only by a small degree. AMG remains roughly the same, minus a dip in the maximum message time that could be due to rank-to-node mapping changes.
+
+\begin{comment}
+
+Then we use fixed dimensionality to study the impact of increased bandwidth. We run these three applications on 5D torus with direct link bandwidth increases from 2GiB/s, to 4GiB/s and 8GiB/s. As shown in Figure \ref{fig:bandwidth-study}, the data transfer time of each application can be greatly reduced as the bandwidth increases. 
+
+We also study the impact of dimensionality with fixed aggregated bandwidth. We use 3D, 5D and 7D torus network with the same per-node aggregated bandwidth, which is 28Gb/s. With the same aggregated bandwidth, higher dimensionality means shorter diameter and pair-wise distance between nodes. The bandwidth between nodes in each torus network are shown in Table \ref{tab: fix-bandwidth}
+
+As we see from Figure \ref{fig:samebd-amg}, the quartiles of ``3D" box is a little bit higher (1\%) than that of ``5D", which means increasing dimensionality from 3D to 5D has little improvement on the average data transfer time for AMG.  However, there is obvious reduction in those outliers between 3D and 5D. When dimensionality increases up to 7D, the improvement in terms of average data transfer time is still small, but more outliers above the top whisker can be spotted. 
+
+The performance of CrystalRouter actually deteriorate as the torus dimensionality increasing, shown in Figure \ref{fig:samebd-cr}. This is due to the direct link bandwidth reduces from 4.67Gb/s to 2Gb/s, as dimension increases from 3D to 7D. CrystalRouter's large amount of intensive local data transfer benefit more from higher direct link bandwidth than its global transfer from lower diameter and shorter pair-wise distance between nodes. 
+
+The performance of MultiGrid is gradually improved as the dimensionality of torus network increases, shown in Figure \ref{fig:samebd-mg}. The reduced diameter and shorten pair-wise distance between nodes would make the ``Many-to-Many" global data transfer in MultiGrid more efficient. 
+
+We can get the observation that higher dimensionality of torus network would improve the performance of application with ``Many-to-Many" communication patterns, while application with intensive local communication like ``Nearest Neighbor" won't benefit much from higher dimensionality. 
+
+\end{comment}
 
 \section{Interference Analysis}
 \label{sec:interference}
