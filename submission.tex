@@ -71,7 +71,7 @@ Network contention between concurrently running jobs on HPC systems is a primary
 \section{Introduction} 
 \label{sec: intro}
 
-The scale of supercomputers continually grows at a breakneck pace to accommodate the computing power requirements for scientific research. Supercomputers have \changed{tens of thousands} of nodes  and serve as an irreplaceable research vehicle for scientific problems with increasing size and complexity. Supercomputers are usually employed as a shared resource to accommodate many parallel applications (jobs) running concurrently \changed{\cite{jose-ipdps15}} \TODO{cite (still) doesn't fit here. I don't think you need to defend this sentence with a cite}. To be effective, they must maintain high system utilization. These communication and I/O intensive jobs share the system infrastructure such as network and I/O bandwidth, and inevitably there is contention over these shared resources. As supercomputers continue to evolve, these shared resources are increasingly the bottleneck for performance.
+The scale of supercomputers continually grows at a breakneck pace to accommodate the computing power requirements for scientific research. Supercomputers have \changed{tens of thousands} of nodes  and serve as an irreplaceable research vehicle for scientific problems with increasing size and complexity. Supercomputers are usually employed as a shared resource to accommodate many parallel applications (jobs) running concurrently. To be effective, they must maintain high system utilization. These communication and I/O intensive jobs share the system infrastructure such as network and I/O bandwidth, and inevitably there is contention over these shared resources. As supercomputers continue to evolve, these shared resources are increasingly the bottleneck for performance.
 
 
 \begin{figure}[h!]
@@ -95,13 +95,13 @@ The scale of supercomputers continually grows at a breakneck pace to accommodate
 
 When submitting jobs to HPC systems, users request resources in terms of node counts and expected runtime. The batch scheduler is then responsible for dispatching them to the system. Typically, multiple jobs run concurrently, resulting in the shared use of resources, particularly network and storage. A prominent problem with this approach is network contention among concurrently running jobs. If the network resources of concurrently running jobs aren't isolated, the resulting sharing can cause communication variability that results in performance degradation for some or all such jobs \cite{abhinav-sc13}. This delay can propagate into the queueing time of the following submitted jobs, thus leading to low system throughput and utilization \cite{jose-ipdps15}. This adverse effect of network sharing can be mitigated by providing jobs with isolated allocations and exclusive network resources.
 
-On the widely used torus-connected HPC systems \cite{bgq,tofu,titan}, two allocation strategies are commonly used. The contiguous allocation strategy assigns to each job a compact and contiguous set of computing nodes, as shown in Figure \ref{fig:overview_sub1}. The partition-based allocation approach used in Blue Gene series systems is an example of such a strategy \changed{\cite{bgloverview}} \TODO{this one is OK. Tried seeing if there were a more recent cite for this, but didn't come up with anything}. The contiguous strategy favors application performance through isolated networking within a partition and the locality that implies. However, this strategy can cause both internal fragmentation (when more nodes are allocated to a job than it requests) and external fragmentation (when sufficient nodes are available for a request, but they can not be allocated contiguously), therefore leading to lower system utilization than is otherwise possible. On the other side of the coin, the non-contiguous allocation strategy, used by the Cray XT/XE series \cite{carl-cug}, assigns free nodes to jobs regardless of contiguity, though of course efforts are made to maximize locality. Figure~\ref{fig:overview_sub2} shows an example non-contiguous allocation. While eliminating internal and external fragmentation as seen in contiguous allocation systems, in return non-contiguous allocations introduce contention between jobs due to the interleaving of job nodes. The non-contiguous node allocation can significantly reduce job performance, especially for communication-intensive ones \changed{\cite{abhinav-sc13}.}
+On the widely used torus-connected HPC systems \cite{bgq,tofu,titan}, two allocation strategies are commonly used. The contiguous allocation strategy assigns to each job a compact and contiguous set of computing nodes, as shown in Figure \ref{fig:overview_sub1}. The partition-based allocation approach used in Blue Gene series systems is an example of such a strategy \changed{\cite{bgloverview}}. The contiguous strategy favors application performance through isolated networking within a partition and the locality that implies. However, this strategy can cause both internal fragmentation (when more nodes are allocated to a job than it requests) and external fragmentation (when sufficient nodes are available for a request, but they can not be allocated contiguously), therefore leading to lower system utilization than is otherwise possible. On the other side of the coin, the non-contiguous allocation strategy, used by the Cray XT/XE series \cite{carl-cug}, assigns free nodes to jobs regardless of contiguity, though of course efforts are made to maximize locality. Figure~\ref{fig:overview_sub2} shows an example non-contiguous allocation. While eliminating internal and external fragmentation as seen in contiguous allocation systems, in return non-contiguous allocations introduce contention between jobs due to the interleaving of job nodes. The non-contiguous node allocation can significantly reduce job performance, especially for communication-intensive ones \changed{\cite{abhinav-sc13}.}
 
 We envision that future HPC schedulers will adopt a flexible job allocation mechanism which combines the best of both contiguous and non-contiguous allocation strategies. Such a flexible mechanism would take shared resource needs of jobs into account when making allocation decisions (e.g., network). With knowledge and analysis of job communication patterns, it can be identified which jobs require network isolation and locality, and to what degree. Then, rather than allocating each job in a ``know-nothing'' manner, one may specialize allocation so that, for example, only the jobs with stringent network needs are given compact, isolated allocations, resulting in maximized utilization and minimized perceivable resource contention effects.
 
 In this work, we focus on an in-depth analysis of intra- and inter-job communication interference with different job allocation strategies on torus-connected HPC systems, which are used on six of the top 10 supercomputers on the \changed{June 2015} Top500 lists~\cite{top500}. The current generation of IBM Blue Gene/Q (BG/Q) supercomputers, such as Mira at Argonne Nation Laboratory and Sequoia at Lawrence Livermore National Laboratory, has its nodes connected in a 5D torus network \cite{bgq}. The K computer from Japan uses the ``Tofu'' system, which is a 6D mesh/torus topology \cite{tofu}. Titan, a Cray XK7 supercomputer located at the Oak Ridge Leadership Computing Facility (OLCF), has nodes connected in a 3D torus within the compute partition \cite{titan}. Although our analyses are based on torus networks, the ideas conveyed in this work is applicable to networks with different topologies. 
 
-We selected three signature applications from the DOE Design Forward Project~\cite{designforwardwebpage} as examples to conduct detailed study about their communication patterns \TODO{checked with some folks and there actually isn't a better citation for now.}. We use a sophisticated simulation toolkit named CODES (standing for Co-Design of Multi-layer Exascale Storage Architectures)~\cite{Jason-2011} as a research vehicle to evaluate the performance of these applications with various allocations in a controlled environment. We then analyze the intra- and inter-job interference by simulating these applications running exclusively and concurrently with different allocations. We believe the insights presented in this work can be very useful for the design of future HPC batch job schedulers and resource managers.
+We selected three signature applications from the DOE Design Forward Project~\cite{designforwardwebpage} as examples to conduct detailed study about their communication patterns. We use a sophisticated simulation toolkit named CODES (standing for Co-Design of Multi-layer Exascale Storage Architectures)~\cite{Jason-2011} as a research vehicle to evaluate the performance of these applications with various allocations in a controlled environment. We then analyze the intra- and inter-job interference by simulating these applications running exclusively and concurrently with different allocations. We believe the insights presented in this work can be very useful for the design of future HPC batch job schedulers and resource managers.
 
 
 \NOTE{JJ removed the list of contributions, because they are exactly the same as the preceding paragraph.}
@@ -519,68 +519,37 @@ There are lots of research work try to design fancy allocation algorithms to pro
 \end{figure*}
 
 
-In non-contiguous allocation systems, the nodes assigned to each job could be scatter anywhere in the system. Some HPC systems predefine the minimum number of nodes consist of the allocation unit. The nodes within each unit are contiguous, and units assigned to each job may have arbitrary locations. We assign each application with a non-contiguous set of allocation units, refers to a small number(like 4) of adjacent nodes as shown in Figure \ref{fig:noncont_sub1}. We compare application's performance when it runs with contiguous allocation and non-contiguous allocation with unit size of 16, as shown in Figure \ref{fig: cont-time-box}. 
+\TODO{This par is OUTDATED}. In non-contiguous allocation systems, the nodes assigned to each job could be scatter anywhere in the system. Some HPC systems predefine the minimum number of nodes consist of the allocation unit. The nodes within each unit are contiguous, and units assigned to each job may have arbitrary locations. We assign each application with a non-contiguous set of allocation units, refers to a small number(like 4) of adjacent nodes as shown in Figure \ref{fig:noncont_sub1}. We compare application's performance when it runs with contiguous allocation and non-contiguous allocation with unit size of 16, as shown in Figure \ref{fig: cont-time-box}. 
 
-Figure \ref{fig:cont-amg} shows that AMG is insensitive to the allocation's contiguity. Non-contiguous allocation can serve AMG equally well as contiguous allocation, as long as the allocation unit in non-contiguous allocation is big enough to preserve the locality of AMG. CrystalRouter shows preference in choosing between contiguous and non-contiguous allocation. As shown in Figure \ref{fig:cont-cr}, there is obvious degradation in terms data transfer time when CrystalRouter running with non-contiguous allocation. The global data transfer in CrystalRouter will take more hops on non-contiguous allocation, thus result in longer communication time. When it comes to MultiGrid shown in Figure \ref{fig:cont-mg}, this degradation is even worse. Since the global data transfer take a great portion of MultiGrid ``Many-to-Many" communication pattern. 
+\TODO{This par is OUTDATED} Figure \ref{fig:cont-amg} shows that AMG is insensitive to the allocation's contiguity. Non-contiguous allocation can serve AMG equally well as contiguous allocation, as long as the allocation unit in non-contiguous allocation is big enough to preserve the locality of AMG. CrystalRouter shows preference in choosing between contiguous and non-contiguous allocation. As shown in Figure \ref{fig:cont-cr}, there is obvious degradation in terms data transfer time when CrystalRouter running with non-contiguous allocation. The global data transfer in CrystalRouter will take more hops on non-contiguous allocation, thus result in longer communication time. When it comes to MultiGrid shown in Figure \ref{fig:cont-mg}, this degradation is even worse. Since the global data transfer take a great portion of MultiGrid ``Many-to-Many" communication pattern. 
 
-%\emph{OBSERVATION}
-The performance of application conforms to Nearest Neighbor communication pattern keep relatively stable with different allocations. Non-contiguous allocation won't aggravate intra-job interference as long as the unit size can preserve the locality in application's communication topology graph. 
+
+\TODO{This par is OUTDATED} The performance of application conforms to Nearest Neighbor communication pattern keep relatively stable with different allocations. Non-contiguous allocation won't aggravate intra-job interference as long as the unit size can preserve the locality in application's communication topology graph. 
 
 \begin{figure*}[t!]
     \centering
     \begin{subfigure}[t]{0.32\textwidth}
         \centering
-        \includegraphics[height=1.5in]{figs/intra-job/cont/amg_box}
+        \includegraphics[height=1.5in]{figs/diffmapping/amg}
         \caption{AMG}
-        \label{fig:cont-amg}
+        \label{fig:diffmap-amg}
     \end{subfigure}%
     \hspace{1em}%
     \begin{subfigure}[t]{0.32\textwidth}
         \centering
-        \includegraphics[height=1.5in]{figs/intra-job/cont/cr_box}
+        \includegraphics[height=1.5in]{figs/diffmapping/cr}
         \caption{CrystalRouter}
-        \label{fig:cont-cr}
+        \label{fig:diffmap-cr}
     \end{subfigure}%
     \begin{subfigure}[t]{0.32\textwidth}
         \centering
-        \includegraphics[height=1.5in]{figs/intra-job/cont/mg_box}
+        \includegraphics[height=1.5in]{figs/diffmapping/mg}
         \caption{MultiGrid}
-        \label{fig:cont-mg}
+        \label{fig:diffmap-mg}
     \end{subfigure}%
-   \caption{Intra-job study: data transfer time of 3 apps with Non/Contiguous allocation}
+   \caption{\TODO{This fig is UPdated} Intra-job study: data transfer time of 3 apps on 3D-balanced allocation with different mapping strategies.}
    \label{fig: cont-time-box}
 \end{figure*}
-
-%Apparently, the size of allocation unit can affect application's performance. The good allocation unit size for each application is decided by application's communication pattern. Once the locality of application's communication pattern could be identified, the size of allocation unit should be able to preserve the locality of application. Figure \ref{fig: chunk-time-box} shows the data transfer time of 3 App with different allocation unit size. 
-%
-%For AMG, unit size of 16 and 8, are equally good, since AMG's locality is 6-rank based. Unit size of 2 can cause performance loss to AMG. For CrystalRouter data transfer time increases as the unit size decreases from 16 to 8 and 2. Unit size of 16 will preserve not only the 5-rank local community in CrystalRouter communication pattern, but also part of the diagonal global data transfer.  Unit size of 8 can only guarantee the locality of that 5-rank community. And unit size of 2 will lose all the locality of CrystalRouter and make the intra-job communication less efficient. For MultiGrid, smaller unit size prolong the data transfer time. The difference between different unit size is not obvious, since MultiGrid is nearly all-to-all dominant.
-%
-%
-%\begin{figure*}[t!]
-%    \centering
-%    \begin{subfigure}[t]{0.3\textwidth}
-%        \centering
-%        \includegraphics[height=1.2in]{figs/intra-job/chunk/amg_box}
-%        \caption{AMG}
-%        \label{fig:chunk-amg-box}
-%    \end{subfigure}%
-%    \hspace{1em}%
-%    \begin{subfigure}[t]{0.3\textwidth}
-%        \centering
-%        \includegraphics[height=1.2in]{figs/intra-job/chunk/cr_box}
-%        \caption{CrystalRouter}
-%        \label{fig:chunk-cr-box}
-%    \end{subfigure}%
-%    \hspace{1em}%
-%    \begin{subfigure}[t]{0.3\textwidth}
-%        \centering
-%        \includegraphics[height=1.2in]{figs/intra-job/chunk/mg_box}
-%        \caption{MultiGrid}
-%        \label{fig:chunk-mg-box}
-%    \end{subfigure}%
-%   \caption{Data Transfer Time of 3 Apps with Different Unit Size}
-%   \label{fig: chunk-time-box}
-%\end{figure*}
 
 
 
