@@ -140,20 +140,20 @@ There are many applications running on HPC systems, such as Mira \cite{bgq} and 
 
 \begin{figure}[t!]
     \centering
-    \begin{subfigure}[t]{0.24\textwidth}
+    \begin{subfigure}[t]{0.25\textwidth}
         \centering
-        \includegraphics[height=1.2in]{figs/appstudy/amg/amg_pip}
-        \caption{Communication Topology}
+        \includegraphics[height=1.5in]{figs/appstudy/amg/amg_pip}
+        \caption{}
         \label{fig:amg-communication-topology}
     \end{subfigure}%
     ~
     \begin{subfigure}[t]{0.24\textwidth}
         \centering
         \includegraphics[height=1.2in]{figs/appstudy/amg/amg_data_transfer}
-        \caption{Data Volume}
+        \caption{}
         \label{fig:amg-data-trans}
     \end{subfigure}
-    \caption{AMG. (a) rank-to-rank communication topology graph. (b) the data sent/received by each rank in AMG.}
+    \caption{AMG. (a) Rank-to-rank communication topology graph, shows the intensity of communication between ranks in AMG. (b) The amount of data sent/received by each rank in AMG. Y-axis labels the amount of data transferred in MB, x-axis is the rank. }
 \end{figure}
 
 The Algebraic MultiGrid Solver, or AMG, is a parallel algebraic multi-grid solver for linear systems arising from problems on unstructured mesh physics packages. It has been derived directly from the BoomerAMG solver that is being developed in the Center for Applied Scientific Computing (CASC) at LLNL \cite{amg}. The dominant communication pattern is regional communication with decreasing message size for different parts of the multi-grid v-cycle.
@@ -167,20 +167,20 @@ Figure~\ref{fig:amg-data-trans} shows the amount of data each rank transferred i
 
 \begin{figure}[t!]
     \centering
-    \begin{subfigure}[t]{0.22\textwidth}
+    \begin{subfigure}[t]{0.25\textwidth}
         \centering
-        \includegraphics[height=1.2in]{figs/appstudy/cr/cr_pip}
+        \includegraphics[height=1.5in]{figs/appstudy/cr/cr_pip}
         \caption{Communication Topology}
         \label{fig:cr-communication-topology}
     \end{subfigure}
     ~
-    \begin{subfigure}[t]{0.22\textwidth}
+    \begin{subfigure}[t]{0.24\textwidth}
         \centering
         \includegraphics[height=1.2in]{figs/appstudy/cr/cr_data_transfer}
         \caption{Data Volume}
         \label{fig:cr-data-trans}
     \end{subfigure}
-    \caption{CrystalRouter. (a) rank-to-rank communication topology graph. (b) the data sent/received by each rank in CrystalRouter. }
+    \caption{CrystalRouter. (a) Rank-to-rank communication topology graph, shows the intensity of communication between ranks in CrystalRouter. (b) The amount of data sent/received by each rank in CrystalRouter. Y-axis labels the amount of data transferred in MB, x-axis is the rank. }
 \end{figure}
 
 The second MiniApp covered is CrystalRouter, the extracted communication kernel of the full application Nek5000~\cite{crystalrouter}, which is a spectral element CFD application developed at Argonne National Laboratory \changed{\cite{nek5000}}. It features spectral element multi-grid solvers coupled with a highly scalable, parallel coarse-grid solver that is widely used for projects including ocean current modeling, thermal hydraulics of reactor cores, and spatiotemporal chaos. CrystalRouter demonstrates the ``many-to-many'' communication pattern through a scalable multi-stage communication process. The way CrystalRouter works is nodes compute for a while, then synchronize and communicate, continually alternating between these two types of activities.
@@ -194,20 +194,20 @@ Figure~\ref{fig:cr-data-trans} shows the amount of data each rank transferred in
 
 \begin{figure}[t!]
     \centering
-    \begin{subfigure}[t]{0.22\textwidth}
+    \begin{subfigure}[t]{0.25\textwidth}
         \centering
-        \includegraphics[height=1.2in]{figs/appstudy/mg/mg_pip}
+        \includegraphics[height=1.5in]{figs/appstudy/mg/mg_pip}
         \caption{Communication Topology}
         \label{fig:mg-communication-topology}
     \end{subfigure}
     ~
-    \begin{subfigure}[t]{0.22\textwidth}
+    \begin{subfigure}[t]{0.24\textwidth}
         \centering
         \includegraphics[height=1.2in]{figs/appstudy/mg/mg_data_transfer}
         \caption{Data Volume}
         \label{fig:mg-data-trans}
     \end{subfigure}
-    \caption{MultiGrid. (a) rank-to-rank communication topology graph. (b) the data sent/received by each rank in MultiGrid.}
+    \caption{MultiGrid. (a) Rank-to-rank communication topology graph, shows the intensity of communication between ranks in MultiGrid. (b) The amount of data sent/received by each rank in MultiGrid. Y-axis labels the amount of data transferred in MB, x-axis is the rank. }
 \end{figure}
 
 MultiGrid is geometric multi-grid v-cycle from the production elliptic solver BoxLib, a software framework for massively parallel block-structured adaptive mesh refinement (AMR) codes \changed{\cite{boxlib}}. MultiGrid conforms to many-to-many communication pattern with decreasing message size and collectives for different parts of the multi-grid v-cycle. It is widely used for structured grid physics packages. 
