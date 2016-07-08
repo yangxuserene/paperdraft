@@ -4,9 +4,24 @@
 
 %A parallel application usually conforms to a combination of several basic communication patterns\cite{roth}. At its different execution phases, the application's communication behavior may follow different basic patterns respectively. \textcolor{blue}{When we look into the data flow during application execution, most parallel applications start with broadcast operation to distribute the data from root process to other processes\textcolor{red}{ref needed here}, followed by a series of computation and communication that conforms to certain pattern, which is usually the dominant part of application's execution. Before the application come to completion, all the working process will return their results to the root directly or hierarchically.} Parallel application's communication pattern usually involves lots of factors, such as communication intensity, operation-to-operation dependencies and the ``critical path" in its communication topology graph, etc. In this work, we focus on the locality of application's rank-to-rank communication topology graph.
 
-A parallel application usually conforms to a combination of several basic communication patterns \cite{roth}. At its different execution phases, the application's communication behavior may follow different basic patterns respectively. There are many profiling tools available to capture information regarding communication patterns of parallel applications~\cite{tau,mpip,scala,sst,oxbow}. They can provide information such as the percentage of different MPI operations of the applications, communication topology, the amount of data transferred between processes.
+A parallel application usually conforms to a combination of several basic communication patterns~\cite{roth}. 
+At its different execution phases, 
+the application's communication behavior may follow certain basic patterns respectively. 
+There are many profiling tools available to capture 
+information regarding communication patterns of parallel applications~\cite{tau,mpip,sst,oxbow}. 
+They can provide information such as the percentage of different MPI operations, 
+communication topology, the amount of data transferred between processes, etc.
 
-There are many applications running on HPC systems, such as Mira \cite{bgq} and Titan \cite{titan}, that are communication intensive and conform to various communication patterns. In this work, we select three representative applications from the DOE Design Forward Project. Each application exhibits a distinctive communication pattern that is commonly seen in HPC applications. We believe that the communication patterns of these applications are representative of a wide array of applications running on leadership-class machines. Specifically, we study the Algebraic MultiGrid Solver (AMG), Geometric MultiGrid (MultiGrid) and CrystalRouter MiniApps. The communication pattern figures we present in Section~\ref{sec:amg}, \ref{sec:crystalrouter}, and \ref{sec:multigrid} are generated with the IPM~\cite{ipm} data gathered from publicly available traces~\cite{designforwardwebpage}.
+There are many applications running on HPC systems such as Mira~\cite{bgq} and Titan~\cite{titan}. 
+These applications are communication intensive and conform to various communication patterns. 
+In this work, we select three representative applications from the DOE Design Forward Project. 
+Each application exhibits a distinctive communication pattern that is commonly seen in HPC applications. 
+We believe that the communication patterns of these applications 
+are representative of a wide array of applications running on leadership-class machines. 
+Specifically, we study the Algebraic MultiGrid Solver (AMG), 
+Geometric MultiGrid (MultiGrid) and CrystalRouter MiniApps. 
+The communication matrix presented in Figure~\ref{fig:apps_communication_matrix}
+are generated with the IPM~\cite{ipm} data gathered from publicly available traces~\cite{designforwardwebpage}.
 
 % MiniApps are reduced proxy applications that encapsulate the salient performance of larger full size applications \cite{miniapp}. Since we only focus on the dominant communication pattern of parallel applications, these MiniApps are perfect candidates for analysis the application's performance on different allocations or on new network architectures. We choose three MiniApps, namely, Algebraic Multigrid Solver(AMG), Geometric MultiGrid(MultiGrid) and CrystalRouter. Their representative communication patterns that are commonly seen in the HPC system workload. The communication pattern figures we present here are generated with the IPM \cite{ipm} data from \cite{designforwardwebpage}.
 
@@ -32,6 +47,7 @@ There are many applications running on HPC systems, such as Mira \cite{bgq} and 
         \label{fig:mg-communication-topology}
     \end{subfigure}
     \caption{Applications rank-to-rank communication topology graph.}
+    \label{fig:apps_communication_matrix}
 \end{figure*}
 
 

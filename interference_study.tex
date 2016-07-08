@@ -54,7 +54,7 @@ In the allocation shapes experiment, we select three possible shapes can can com
 
 AMG with 3D ``Nearest Neighbor" communication pattern takes less time when being assigned with 3D-unbalanced allocation than 3D-balanced, as shown in Figure \ref{fig:shapstudy-amg}. And MultiGrid gets the best performance (shortest data transfer time) when running on 3D-balanced allocation, as shown in Figure \ref{fig:shapstudy-mg}. Since MultiGrid's communication pattern is ``Many-to-Many" dominant, 3D-balanced is the most compact allocation with shortest pair-wise distance between nodes, which can reduce the aggregated hops for transferring message among ranks in MultiGrid. As CrystalRouter has both dominant local communication and multi-stage global data transfer, the 3D-balance is also the best allocation, but its advantage over 3D-unbalanced is not that obvious as to MultiGrid, as shown in Figure \ref{fig:shapstudy-cr}.
 
-Lots of research studies have designed fancy allocation algorithms to provide application with the most compact allocation\cite{leung,LO}. However, as shown in our experiments, providing cubical allocation without considering application's communication pattern won't guarantee the best performance for every application. Compact allocation should be provided to application with global data transfer, such as those conforms to ``Many-to-Many" communication pattern. Application with dominant communication pattern like ``Nearest Neighbor" won't fully utilize the compact allocation and could get even better performance on a relaxed allocation shape. 
+Lots of research studies have designed complex allocation algorithms to provide application with the most compact allocation\cite{leung,LO}. However, as shown in our experiments, providing cubical allocation without considering application's communication pattern can not guarantee the best performance for every application. Compact allocation should be provided to application with global data transfer, such as those conforms to ``Many-to-Many" communication pattern. Application with dominant communication pattern like ``Nearest Neighbor" won't fully utilize the compact allocation and could get even better performance on a relaxed allocation shape. 
 
 
 
@@ -93,7 +93,7 @@ AMG remains roughly the same when it been mapped by ``Linear" and ``Cube", shown
 The ``Cube" mapping improves CrystalRouter's performance over the ``Linear" by reducing the pair-wise distance between ranks, shown in Figure \ref{fig:diffmap-cr}. The global data transfer in CrystalRouter will takes fewer hops with ``Cube" mapping. The ``Random" mapping scatters the ranks within the local neighborhood of CrystalRouter and make their communication less efficient. 
 
 
-The ``Cube" mapping benefits MultiGrid's ``Many-to-Many" communication. However, due to the small amount of data transfer among ranks in MultiGrid, ``Cube" mapping doesn't exhibit a drastic advantage. ``Random" mapping neither cause too much degradation for the same reason, shown in Figure \ref{fig:diffmap-mg}.
+The ``Cube" mapping benefits MultiGrid's ``Many-to-Many" communication. However, due to the small amount of data transfer among ranks in MultiGrid, ``Cube" mapping fails to exhibit a drastic advantage. ``Random" mapping neither cause too much degradation for the same reason, shown in Figure \ref{fig:diffmap-mg}.
 
 
 \begin{figure*}[t!]
