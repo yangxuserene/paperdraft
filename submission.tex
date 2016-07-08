@@ -61,7 +61,21 @@ Argonne, IL, USA 60439\\
 
 \begin{abstract} 
 
-Network contention between concurrently running jobs on HPC systems is a primary cause of performance variability. Optimizing job allocation and avoiding network sharing are hence crucial to alleviate the potential degradation in performance. In order to do these effectively, an understanding of the interaction between applications, their communication patterns, and the system architecture are required. In this work, we choose three representative HPC applications from DOE Design Forward Project and conduct detailed simulations of high-performance network topologies to analyze both intra- and inter-job interference. By scrutinizing the communication behaviors of these applications, we identify relationships between these behaviors and the possible interference introduced by different job allocation scenarios. Our comprehensive analyses in this work illuminate a path towards job-communication-pattern-aware HPC resource allocation.
+Network contention between concurrently running jobs on HPC systems 
+is a primary cause of performance variability. 
+Optimizing job allocation and avoiding network sharing are 
+hence crucial to alleviate the potential performance degradation. 
+In order to do these effectively, 
+an understanding of the interference among the concurrently running jobs, 
+their communication patterns, and the network contention are required. 
+In this work, we choose three representative HPC applications from 
+DOE Design Forward Project and conduct detailed simulations of 
+on a Torus network model to analyze both intra- and inter-job interference. 
+By scrutinizing the communication behaviors of these applications, 
+we identify relationships between these behaviors and 
+the possible interference introduced by different job placement policies. 
+Our comprehensive analyses in this work illuminate a path 
+towards job-communication-pattern-aware HPC resource allocation.
 
 
 \end{abstract}
@@ -83,16 +97,13 @@ Network contention between concurrently running jobs on HPC systems is a primary
 The work at Illinois Institute of Technology is supported in part by U.S. National Science Foundation grants CNS-1320125 and CCF-1422009. This work is also supported by the U.S. Department of Energy, Office of Science, Advanced Scientific Computing Research, under Contract DE-AC02-06CH11357.
 
 \bibliographystyle{IEEEtran}
-\bibliography{./reference}  
-
+\bibliography{IEEEabrv, reference}
 
 \vspace{5\baselineskip}
 
 \begin{framed}
 The submitted manuscript has been created by UChicago Argonne, LLC, Operator of Argonne National Laboratory ("Argonne").  Argonne, a U.S. Department of Energy Office of Science laboratory, is operated under Contract No. DE-AC02-06CH11357.  The U.S. Government retains for itself, and others acting on its behalf, a paid-up nonexclusive, irrevocable worldwide license in said article to reproduce, prepare derivative works, distribute copies to the public, and perform publicly and display publicly, by or on behalf of the Government.
 \end{framed}
-
-
 
 
 \end{document}
