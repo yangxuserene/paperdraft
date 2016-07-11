@@ -30,9 +30,9 @@ As supercomputers continue to evolve, these shared resources are increasingly th
     \end{subfigure}%
    \caption{Multiple jobs running concurrently with different allocations. 
    Each job is represented by a specific color. 
-   a) shows the effect of contiguous allocation, 
+   a) shows the effect of contiguous job placement, 
    which could possibly reduce the inter-job interference. 
-   b) shows non-contiguous allocation, 
+   b) shows non-contiguous job placement, 
    which may introduce both intra and inter-job interference. 
    }
    \label{fig:overview}
@@ -44,7 +44,7 @@ The batch scheduler is then responsible for dispatching the submitted jobs to th
 Typically, there are multiple jobs running concurrently on the system,
 resulting in the shared use of resources, particularly network links. 
 A prominent problem with this network sharing is the contention over
-the network resource among those concurrently running jobs. 
+the network among those concurrently running jobs. 
 The network contention can cause communication variability and 
 performance degradation to those jobs~\cite{abhinav-sc13}. 
 This performance degradation can propagate into the queueing time of the following submitted jobs, 
@@ -72,26 +72,26 @@ adopted by the Cray XT/XE series~\cite{carl-cug},
 assigns free nodes to jobs regardless of contiguity, 
 though of course efforts are made to maximize locality. 
 Figure~\ref{fig:overview_sub2} shows the effect of non-contiguous placement. 
-While eliminating internal and external fragmentation as seen in contiguous allocation systems, 
-in return non-contiguous allocations introduce contention between jobs due to the interleaving of job nodes. 
+While eliminating internal and external fragmentation as seen in contiguous placement systems, 
+in return non-contiguous placement policy introduces contention between jobs due to the interleaving of job nodes. 
 The non-contiguous job placement can significantly reduce job performance, 
 especially for communication-intensive ones~\cite{abhinav-sc13}.
 
 We envision that future HPC systems will be equipped with 
 a flexible job placement mechanism which combines the 
-best of both contiguous and non-contiguous placement. 
+best of both contiguous and non-contiguous policy. 
 Such a flexible job placement mechanism should take 
 shared resource needs (e.g., network resources) of jobs into account 
 when making scheduling and allocation decisions. 
 With the knowledge and analysis of job communication patterns, 
-it can be identified which jobs require exclusive network and allocation locality, and to what degree. 
+it can be identified which jobs require exclusive network and compact allocation, and to what degree. 
 Then, rather than allocating each job in a ``know-nothing'' manner, 
-one may specialize allocation so that, for example, 
+one may specialize job placement policy so that, for example, 
 only the jobs with stringent network needs are given compact, isolated allocations, 
 resulting in maximized utilization and minimized perceivable resource contention effects.
 
 In this work, we focus on an in-depth analysis of intra- and inter-job 
-communication interference with different job placement on torus-connected HPC systems. 
+communication interference with different job placements on torus-connected HPC systems. 
 Torus-based networks are used on six of the top 10 supercomputers 
 on the June 2015 Top500 lists~\cite{top500}. 
 The current generation of IBM Blue Gene/Q (BG/Q) supercomputers, 

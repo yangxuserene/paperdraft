@@ -11,29 +11,29 @@ With such knowledge about jobs' communication patterns,
 we can analyze the possible interference between jobs and 
 take precautions to alleviate the negative effect when making placement decisions. 
 
-When an application with dominant communication that is intensive ``Many-to-Many", 
-the scheduler should grant it with compact node allocation and exclusive network provision. 
+When an application with dominant communication that is intensive many-to-many, 
+the scheduler should provide it with compact node allocation and exclusive network provision. 
 The compact allocation can guarantee the shortest pair-wise distance between all the ranks, 
 and make the data transfer between ranks take less hops. 
 On the other hand, 
 the exclusive network provision will prevent other adjacent applications from sharing network resources, 
 thus eliminate the performance degradation due to interference.
 
-Not every application's preferable resource are compact node allocation 
+Not every application's preferable resource are compact allocation 
 and exclusive network provision. 
-As we demonstrate in our analysis, 
+As we demonstrate in our study, 
 applications whose dominant communication pattern contains intensive 
-``neighborhood communication" like ``Nearest Neighbor" do not benefit 
-from compact node allocation and exclusive network provision. 
+``neighborhood communication" like nearest Neighbor do not benefit 
+from compact allocation and exclusive network provision. 
 Applications, such as AMG, can run with non-contiguous node 
 allocation without performance degradation, 
 as long as the allocation unit can accommodate their ``neighborhood communication".
 
-The allocation unit size shouldn't be fixed. 
+The size of allocation unit shouldn't be fixed. 
 Instead, the scheduler should choose a proper unit size 
 based on the scale of ``neighborhood communication" of each job. 
 The best unit size should be neither too big nor too small, 
-just perfectly fit for the size of that ``neighborhood". 
+just perfectly fit for the scale of that ``neighborhood". 
 Big unit size can not be fully utilized and thus cause fragmentation. 
 Small unit size will not be able to accommodate the ``neighborhood communication", 
 making the intra-job communication less efficient. 

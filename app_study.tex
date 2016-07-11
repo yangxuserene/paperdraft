@@ -6,7 +6,7 @@
 
 A parallel application usually conforms to a combination of several basic communication patterns~\cite{roth}. 
 At its different execution phases, 
-the application's communication behavior may follow certain basic patterns respectively. 
+the application's communication behavior may follow certain basic pattern respectively. 
 There are many profiling tools available to capture 
 information regarding communication patterns of parallel applications~\cite{tau,mpip,sst,oxbow}. 
 They can provide information such as the percentage of different MPI operations, 
@@ -20,8 +20,8 @@ We believe that the communication patterns of these applications
 are representative of a wide array of applications running on leadership-class machines. 
 Specifically, we study the Algebraic MultiGrid Solver (AMG), 
 Geometric MultiGrid (MultiGrid) and CrystalRouter MiniApps. 
-The communication matrix presented in Figure~\ref{fig:apps_communication_matrix}
-are generated with the IPM~\cite{ipm} data gathered from publicly available traces~\cite{designforwardwebpage}.
+The communication matrix of each application is presented in Figure~\ref{fig:apps_communication_matrix}. 
+%are generated with the IPM~\cite{ipm} data gathered from publicly available traces~\cite{designforwardwebpage}.
 
 
 \begin{figure*}[htp]
@@ -78,9 +78,9 @@ The dominant communication pattern is regional communication
 with decreasing message size for different parts of the multi-grid v-cycle.
 
 Figure~\ref{fig:amg-communication-topology} shows the communication matrix 
-of a small scale AMG execution with 216 MPI Ranks. 
+of a small scale AMG execution with 216 MPI ranks. 
 Note that the dominant communication pattern of the application doesn't change with scale. 
-We can make the observation that AMG's dominant communication pattern is 3D Nearest Neighbor, 
+We can make the observation that AMG's dominant communication pattern is 3D nearest neighbor, 
 each rank has intensive communication with up to six neighbors, 
 depending on the boundaries of the ranks. 
 Applications with similar pattern include PARTISN~\cite{partisn} and SNAP~\cite{snap}.
@@ -113,7 +113,7 @@ which is a spectral element CFD application developed at Argonne National Labora
 It features spectral element multi-grid solvers coupled with a highly scalable, 
 parallel coarse-grid solver that is widely used for projects including ocean current modeling, 
 thermal hydraulics of reactor cores, and spatiotemporal chaos. 
-CrystalRouter demonstrates the ``many-to-many'' communication pattern 
+CrystalRouter demonstrates the many-to-many communication pattern 
 through a scalable multi-stage communication process. 
 The way CrystalRouter works is the nodes compute for a while, 
 then synchronize and communicate, continually alternating between these two types of activities.
@@ -161,7 +161,7 @@ Figure~\ref{fig:mg-communication-topology} shows the communication matrix of Mul
 We can see intensive communication along the diagonal that resembles nearest neighbor communication, similar to AMG. 
 However, the communication topology leads to a greater ``spread'' of communication across the set of ranks, 
 challenging the maximization of communication locality with respect to ranks. 
-In this sense, it can be considered a ``many-to-many'' pattern. 
+In this sense, it can be considered as many-to-many pattern. 
 Applications with such similar dominant communication pattern are like FillBoundary, another PDE solver code in~\cite{boxlib}.
 
 

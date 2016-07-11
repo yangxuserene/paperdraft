@@ -30,8 +30,7 @@ mapping strategies for each application with given allocation shape.
 In the allocation shapes experiment, 
 we select three possible shapes commonly seen on the 3D torus network. 
 They are 3D balanced-cube, 3D unbalanced-cube and 2D mesh, 
-as shown in Figure \ref{fig:alloc-shapes}.
-
+as shown in Figure \ref{fig:cont_sub1}.
 3D balanced-cube, shown as red in Figure \ref{fig:cont_sub1}, 
 can guarantee the minimum \emph{average pair-wise distance} within the allocation. 
 Some research studies~\cite{leung,abhinav-sc13} indicate that 
@@ -41,7 +40,7 @@ such as \emph{average pair-wise distance}, \emph{diameter} and \emph{contiguity}
 In this work, we select 3D balanced-cube as the most compact allocation on a 3D torus network.
 
 3D unbalanced-cube, shown in green color in Figure \ref{fig:cont_sub1}, 
-is a rectangular prism, which is the possible allocation shape 
+is a rectangular prism, which is a possible allocation shape 
 on the systems with asymmetric networks. 
 For example, Cray XE6/XK7 systems are deployed 3D tori with Gemini routers. 
 The network connections in the \emph{y}-direction have 
@@ -103,12 +102,12 @@ also allow its allocation partition configured into mesh~\cite{zhou-ipdps}.
 \end{figure*}
 
 
-AMG with 3D ``Nearest Neighbor" communication pattern takes less time 
+AMG with 3D nearest neighbor communication pattern takes less time 
 when being assigned with 3D-unbalanced allocation than 3D-balanced, 
 as shown in Figure~\ref{fig:shapstudy-amg}. 
 And MultiGrid gets the best performance (shortest data transfer time) 
 when running on 3D-balanced allocation, as shown in Figure~\ref{fig:shapstudy-mg}. 
-Since MultiGrid's communication pattern is ``Many-to-Many" dominant, 
+Since MultiGrid's communication pattern is many-to-many dominant, 
 3D-balanced is the most compact allocation with shortest pair-wise distance between nodes, 
 which can reduce the aggregated hops for transferring message among ranks in MultiGrid. 
 Since CrystalRouter has both dominant local communication and multi-stage global data transfer, 
@@ -116,13 +115,13 @@ the 3D-balance is also the best allocation, but its advantage over 3D-unbalanced
 that obvious as to MultiGrid, as shown in Figure~\ref{fig:shapstudy-cr}.
 
 Lots of research studies have designed complex placement algorithms 
-to provide application with the most compact allocation~\cite{leung,LO}. 
+to provide applications with the most compact allocation~\cite{leung,LO}. 
 However, as shown in our experiments, providing cubic allocation without 
 considering application's communication pattern can not guarantee 
 the best performance for every application. 
 Compact allocation should be provided to applications with intensive global data transfer, 
-such as those conforms to ``Many-to-Many" communication pattern. 
-Applications with dominant communication pattern like ``Nearest Neighbor" 
+such as those conforms to many-to-many communication pattern. 
+Applications with dominant communication pattern like nearest neighbor 
 can not fully utilize the compact allocation and 
 may get even better performance on a relaxed allocation shape. 
 
@@ -174,7 +173,7 @@ The ``Random" mapping assigns ranks randomly within the allocation.
 AMG remains roughly the same when it been mapped by ``Linear" and ``Cube", 
 shown in Figure~\ref{fig:diffmap-amg}. 
 Although ``Linear" and ``Cube" mapping strategies cause some routing overlap for AMG's communication, 
-both mapping strategies still preserve the locality of AMG's ``3D Nearest Neighbor" communication pattern. 
+both mapping strategies still preserve the locality of AMG's 3D nearest neighbor communication pattern. 
 The ``Random" mapping totally destroys AMG's communication pattern, 
 and results in intra-job interference among all the ranks in AMG. 
 The performance degradation caused by using ``Random" mapping is up to 90\%.
@@ -184,9 +183,7 @@ by reducing the pair-wise distance between ranks, shown in Figure~\ref{fig:diffm
 The global data transfer in CrystalRouter will takes fewer hops with ``Cube" mapping. 
 The ``Random" mapping scatters the ranks within the local neighborhood 
 of CrystalRouter and make their communication less efficient. 
-
-
-The ``Cube" mapping benefits MultiGrid's ``Many-to-Many" communication. 
+The ``Cube" mapping benefits MultiGrid's many-to-many communication. 
 However, due to the small amount of data transfer among ranks in MultiGrid, 
 ``Cube" mapping fails to exhibit a drastic advantage. 
 ``Random" mapping neither cause too much degradation for the same reason, 
@@ -228,7 +225,7 @@ shown in Figure~\ref{fig:diffmap-mg}.
 \label{sec: interjob interference study}
 
 Inter-job interference has been identified as one of the major culprits 
-for application's performance variability~\cite{abhinav-sc13,skinner,rosenthal}. 
+for application's performance variability~\cite{abhinav-sc13,skinner}. 
 Inter-job interference is a more prominent issue for system adopted 
 non-contiguous placement policy than systems with contiguous policy. 
 Applications communication time have been demonstrated to 
@@ -257,7 +254,14 @@ while some rank spend more time with allocation unit size 8 than 16.
 When the unit size reduce to 2, the communication become less efficiency 
 and takes about 15\% more time for transferring data. 
 
-The data transfer time of MultiGrid with different allocation unit sizes doesn't show obvious variability in Figure \ref{fig:interjob-mg}. This is because even big allocation unit size like 16 will still fail to preserve MultiGrid's ``Many-to-Many" pattern. The data transfer time is almost doubled when MultiGrid running concurrently with allocation unit size of 16, as shown in Figure \ref{fig:interjob-mg} . As the unit size decreases, the data transfer time keep growing, but in a slow way, which means in terms of preserving the locality of MultiGrid, allocation unit of size 16, 8 and 2 serve equally bad.
+The data transfer time of MultiGrid with different allocation unit sizes 
+doesn't show obvious variability in Figure~\ref{fig:interjob-mg}. 
+This is because even big allocation unit size like 16 will still fail to preserve MultiGrid's many-to-many pattern. 
+The data transfer time is almost doubled when MultiGrid running concurrently with allocation unit size of 16, 
+as shown in Figure~\ref{fig:interjob-mg}. 
+As the unit size decreases, the data transfer time keep growing, 
+but in a slow way, which means in terms of preserving the locality of MultiGrid, 
+allocation unit of size 16, 8 and 2 serve equally bad.
 
 Choosing the proper unit size in non-contiguous placement policy should 
 also consider application's communication pattern. 
@@ -307,9 +311,9 @@ Based on the above comprehensive study, we can make following observations:
 
     \item The compact allocation may not guarantee the best performance for every application. 
     
-    \item The applications dominated with ``Nearest Neighbor" communications exhibit 
+    \item The applications dominated with nearest neighbor communications exhibit 
     relatively stable performance under different allocation shapes, 
-    while the applications dominated with ``Many-to-Many" communication exhibit 
+    while the applications dominated with many-to-many communication exhibit 
     better performance with compact allocation (e.g, 3D balanced).
     
     \item A good rank-to-node mapping strategy can greatly improve 

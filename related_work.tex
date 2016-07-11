@@ -26,14 +26,14 @@ data centric benchmarks, skeleton benchmarks and Micro benchmarks.
 %\textbf{P3: Interference between concurrently running jobs}\\
 The interference among concurrently running jobs on HPC systems 
 have been identified as major culprit for job's performance variability. 
-Bhatel et al. found that concurrently running applications interfere with each other, 
+Bhatele et al. found that concurrently running applications interfere with each other, 
 and cause their communication time varied from 
 36\% faster to 69\% slower on different HPC systems~\cite{abhinav-sc13}. 
-Skinner et al. found that  there is a 2-3$\times$ slowdown in MPI$\textunderscore$Allreduce 
+Skinner et al. found that  there is a 2-3 times of slowdown in MPI$\textunderscore$Allreduce 
 due to network contention from other concurrently running jobs~\cite{skinner}. 
-Rosenthal et al. found increasing network bandwidth provide limited benefits to a number of applications. 
-The applications that send mostly small messages or large messages asynchronously 
-are not bandwidth bounded, hence, benefit only slightly or not at all from increased bandwidth~\cite{rosenthal}.
+%Rosenthal et al. found increasing network bandwidth provide limited benefits to a number of applications. 
+%The applications that send mostly small messages or large messages asynchronously 
+%are not bandwidth bounded, hence, benefit only slightly or not at all from increased bandwidth~\cite{rosenthal}.
 
 %\textbf{P4: Job allocation(little bit)}\\
 Several research studies focus on optimizing job allocation on HPC systems 
@@ -43,8 +43,8 @@ impact the performance of parallel scientific applications~\cite{hoefler-modelin
 However, as the scale of HPC systems continue to grow, 
 the interference of concurrently running jobs is getting worse, 
 which is hard to be quantified by performance profiling tools alone. 
-Bogdan et al. provide a set of guidelines of how to configure a network with Dragonfly topology 
-for workload with Nearest Neighbor communication pattern~\cite{Bogdan-hpdc14}. 
+Bogdan et al. provide a set of guidelines of how to configure a Dragonfly network 
+for workload with nearest neighbor communication pattern~\cite{Bogdan-hpdc14}. 
 Dong et al. have developed simple benchmarks that conforms to four different communication patterns, 
 namely ping-pong, nearest neighbor, broadcast and all$\textunderscore$reduce, 
 to demonstrate the effectiveness of this highly parallel 5D torus network~\cite{Dong-SC11}.
@@ -55,8 +55,8 @@ We believe this can provide a guideline for other research work.
 Secondly, we explore the intra- and inter-job interference between concurrently running jobs, 
 while similar work such as~\cite{abhinav-sc13} only focuses 
 on the single application's performance degradation due to network contention. 
-Finally, we analyze the impact of different allocation strategies to job's communication behaviors. 
-We further identify the optimal allocation strategy for 
+Finally, we analyze the impact of different placement strategies to job's communication behaviors. 
+We further identify the optimal placement strategy for 
 each application with a specific dominant communication pattern. 
 Based on our study, we claim that further batch scheduler should take 
 job's communication pattern into consideration for its placement decision making. 
