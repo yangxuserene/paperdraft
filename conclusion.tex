@@ -2,31 +2,37 @@
 \label{sec:conclusion}
 In this work, we have studied the communication behavior of three parallel applications, 
 namely AMG, CrystalRouter and MultiGrid. 
-Each application has distinctive communication pattern, 
-that can be representative for a group of jobs in HPC workload. 
-We have used a sophisticated simulation tool named CODES from Argonne National Laboratory 
-to simulate the running of these three parallel applications on a torus network. 
-The torus network provided by CODES has good fidelity and scalability. 
-%We have analyzed the performance of each application's communication in terms of data transfer time 
-%by simulating them running on torus networks with different bandwidth and dimensionality configurations. We have found that higher dimensionality of torus network would improve the performance of application with ``Many-to-Many" communication patterns, while application with intensive local communication like ``Nearest Neighbor" won't benefit much from higher dimensionality.
+Each application has a distinctive communication pattern, 
+which can be representative for a whole range of jobs commonly seen in HPC environment. 
+We have used the CODES simulation toolkit  
+to simulate the running of these applications on a torus network. 
 
-We have analyzed the intra- and inter-job interference by simulating three applications running on the torus network. 
-Based on our comprehensive experiments, we got five observations. 
-1) The compact allocation may not guarantee the best performance for every application. 
-2) The applications dominated with nearest neighbor communications exhibit 
-relatively stable performance under different allocation shapes, 
-while the applications dominated with many-to-many communication exhibit 
-better performance with compact allocation (e.g. 3D balanced). 
-3) A good rank-to-node mapping strategy can greatly improve application's performance when specific allocation is given. 
-4) An optimal size for allocation units should be determined according to 
-an application's dominant communication pattern. 
-In general, a unit size should be large enough to preserve neighboring communication of the application. 
-5) Inter-job interference is inevitable in non-contiguous allocation. 
-However, choosing the proper allocation unit size with job's communication pattern awareness can alleviate such negative effect.
+We have analyzed the intra- and inter-job interference by simulating three applications
+running both independently and concurrently.
+Based on our comprehensive experiments, we made six observations. 
 
+1) Compact allocation may not be necessary for every application.   
+2) The applications dominated by nearest neighbor communications exhibit 
+    relatively stable performance under different allocation shapes as long as
+    the allocation exhibit some degree of locality.
+    
+3) The applications dominated with many-to-many communication exhibit 
+    better performance with more compact allocations (e.g, 3D balanced).
+    
+4) A good rank-to-node mapping strategy can greatly improve 
+    an application performance when a specific allocation is given.
+    
+5) An optimal size for allocation units should be determined 
+    according to an application's dominant communication pattern. 
+    In general, a unit size should be large enough to accommodate  
+    neighboring communication in the application. 
+    
+6) Inter-job interference is inevitable in non-contiguous allocation. 
+    However, choosing the proper allocation unit size with communication 
+    pattern awareness can help alleviate the resulting negative effects. 
 
 We believe that the findings in this work can provide valuable guidance 
 for HPC batch scheduler and resource manager to make flexible job allocations. 
-Rather than using pre-defined partitions and non-contiguous placement policy, 
-future HPC systems should assign each job with preferable resources based on job's communication pattern. 
+Rather than using pre-defined partitions or non-contiguous placement policy, 
+future HPC systems should assign resources to each job based on job communication patterns. 
 

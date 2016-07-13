@@ -10,9 +10,17 @@ cause application performance degradation.
 
 In this section we will study both kinds of interference 
 in the context of a torus network. 
+The current generation of IBM Blue Gene/Q (BG/Q) supercomputers, 
+such as Mira at Argonne Nation Laboratory and 
+Sequoia at Lawrence Livermore National Laboratory, 
+have their compute nodes connected by a 5D torus network~\cite{bgq}. 
+The K computer from Japan uses the ``Tofu'' interconnected system, 
+which has a 6D mesh/torus topology~\cite{tofu}. 
+Titan, a Cray XK7 supercomputer located at the Oak Ridge Leadership Computing Facility (OLCF), 
+has nodes connected in a 3D torus within the compute partition~\cite{titan}. 
 Since the applications communication patterns do not change with the scale,
-\TODO{we perform our experiments with comparatively (to leadership scale) small scale,
-something a 2048 rank cluster to simplify analysis.  }
+we perform our experiments with comparatively (to leadership class) modest scale,
+simulating a 3D torus network with 2048 nodes ($16\times 16 \times 8$) to simplify analysis.
 %we use AMG with 216 ranks, CrystalRouter with 100 ranks, and MultiGrid 125 ranks. 
 %And in order to accommodate three applications running concurrently with different allocations, 
 %we simulate a 2K-node 3D torus ($16^{2} \times 8$) network for the experiments.
@@ -32,6 +40,15 @@ mapping strategies for each application with a given allocation shape.
 
 
 \subsubsection{Allocation Shape Study}
+
+
+\begin{figure}[t]
+    \centering
+        \includegraphics[height=2in]{figs/allocshape/allocation}
+        \caption{Contiguous allocation in three different shapes. 
+    ``Blue" is a 2D mesh, ``Green" is a 3D-unbalanced cube and ``Red" is a 3D-balanced cube. }
+        \label{fig:cont_sub1}
+\end{figure}
 
 In the allocation shapes experiment, 
 we select three possible shapes commonly seen on the 3D torus network. 
@@ -67,44 +84,34 @@ the resulting allocations form 2D meshes.
 The IBM Blue/Gene Q supercomputer Mira at Argonne Leadership Computing Facility 
 also allows its allocation partition to be configured as a mesh~\cite{zhou-ipdps}. 
 
-\begin{figure*}[htp]
+
+\begin{figure*}[t]
     \centering
-    \begin{subfigure}[t]{0.22\textwidth}
+    \begin{subfigure}[t]{0.32\textwidth}
         \centering
-        \includegraphics[height=1.2in]{figs/allocshape/allocation}
-        \caption{ }
-        \label{fig:cont_sub1}
+        \includegraphics[height=1.8in]{figs/intra-job/shapestudy/amg_box}
+        \caption{AMG}
+        \label{fig:shapstudy-amg}
     \end{subfigure}%
-    \hspace{1em}%
-    \begin{subfigure}[t]{0.22\textwidth}
+    \begin{subfigure}[t]{0.32\textwidth}
         \centering
-        \includegraphics[height=1.2in]{figs/allocshape/unitsize/unit16}
-        \caption{ }
-        \label{fig:noncont_sub1}
-    \end{subfigure}%
-    \hspace{1em}%
-    \begin{subfigure}[t]{0.22\textwidth}
+        \includegraphics[height=1.8in]{figs/intra-job/shapestudy/cr_box}
+        \caption{CrystalRouter}
+        \label{fig:shapstudy-cr}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.32\textwidth}
         \centering
-        \includegraphics[height=1.2in]{figs/allocshape/unitsize/unit8}
-        \caption{ }
-        \label{fig:noncont_sub2}
+        \includegraphics[height=1.8in]{figs/intra-job/shapestudy/mg_box}
+        \caption{MultiGrid}
+        \label{fig:shapstudy-mg}
     \end{subfigure}%
-    \hspace{1em}%
-    \begin{subfigure}[t]{0.22\textwidth}
-        \centering
-        \includegraphics[height=1.2in]{figs/allocshape/unitsize/unit2}
-        \caption{ }
-        \label{fig:noncont_sub3}
-    \end{subfigure}%
-    \caption{
-    (a) Contiguous allocation in three different shapes. 
-    ``Blue" is a 2D mesh, ``Green" is a 3D-unbalanced cube and ``Red" is a 3D-balanced cube. 
-    (b)-(d) Non-contiguous allocation. Each job is represented by a specific color. 
-    The nodes assigned to different jobs are interleaved, 
-    the size of allocation unit are 16, 8 and 2.
-    }
-    \label{fig:alloc-shapes}
+   \caption{
+   Data transfer time of AMG, CrystalRouter and MultiGrid on 3D-balanced, 
+   3D-unbalanced and 2D allocation.
+   }
+   \label{fig:shapestudy}
 \end{figure*}
+
 
 Figure~\ref{fig:shapstudy-amg} shows 
 AMG with 3D nearest neighbor communication pattern takes slightly less time 
@@ -119,33 +126,6 @@ the 3D-balance is also the best allocation, but its advantage over 3D-unbalanced
 that obvious as to MultiGrid, as shown in Figure~\ref{fig:shapstudy-cr}.
 
 
-\begin{figure*}[htp]
-    \centering
-    \begin{subfigure}[t]{0.32\textwidth}
-        \centering
-        \includegraphics[height=1.5in]{figs/intra-job/shapestudy/amg_box}
-        \caption{AMG}
-        \label{fig:shapstudy-amg}
-    \end{subfigure}%
-    \hspace{1em}%
-    \begin{subfigure}[t]{0.32\textwidth}
-        \centering
-        \includegraphics[height=1.5in]{figs/intra-job/shapestudy/cr_box}
-        \caption{CrystalRouter}
-        \label{fig:shapstudy-cr}
-    \end{subfigure}%
-    \begin{subfigure}[t]{0.32\textwidth}
-        \centering
-        \includegraphics[height=1.5in]{figs/intra-job/shapestudy/mg_box}
-        \caption{MultiGrid}
-        \label{fig:shapstudy-mg}
-    \end{subfigure}%
-   \caption{
-   Data transfer time of AMG, CrystalRouter and MultiGrid on 3D-balanced, 
-   3D-unbalanced and 2D allocation.
-   }
-   \label{fig:shapestudy}
-\end{figure*}
 
 A number of studies have designed complex placement algorithms 
 to provide applications with the most compact allocation~\cite{leung,LO}. 
@@ -175,7 +155,7 @@ maps each rank according to the dimensional ordering of compute nodes.
 The ``Cube" mapping assigns ranks into consecutive $2^{3}$ cubes. 
 The ``Random" mapping assigns ranks randomly within the allocation. 
 
-AMG \TODO{remains} roughly the same when it been mapped by ``Linear" and ``Cube", 
+AMG behavior remains roughly the same when it been mapped by ``Linear" and ``Cube", 
 shown in Figure~\ref{fig:diffmap-amg}. 
 Although ``Linear" and ``Cube" mapping strategies cause some routing overlap for AMG's communication, 
 both mapping strategies still preserve the locality of AMG's 3D nearest neighbor communication pattern. 
@@ -195,24 +175,24 @@ However, due to the small amount of data transfered among ranks in MultiGrid,
 shown in Figure~\ref{fig:diffmap-mg}.
 
 
-\begin{figure*}[htp]
+\begin{figure*}[t]
     \centering
     \begin{subfigure}[t]{0.32\textwidth}
         \centering
-        \includegraphics[height=1.5in]{figs/diffmapping/amg}
+        \includegraphics[height=1.8in]{figs/diffmapping/amg}
         \caption{AMG}
         \label{fig:diffmap-amg}
     \end{subfigure}%
     \hspace{1em}%
     \begin{subfigure}[t]{0.32\textwidth}
         \centering
-        \includegraphics[height=1.5in]{figs/diffmapping/cr}
+        \includegraphics[height=1.8in]{figs/diffmapping/cr}
         \caption{CrystalRouter}
         \label{fig:diffmap-cr}
     \end{subfigure}%
     \begin{subfigure}[t]{0.32\textwidth}
         \centering
-        \includegraphics[height=1.5in]{figs/diffmapping/mg}
+        \includegraphics[height=1.8in]{figs/diffmapping/mg}
         \caption{MultiGrid}
         \label{fig:diffmap-mg}
     \end{subfigure}%
@@ -248,6 +228,46 @@ shown respectively in Figure~\ref{fig:noncont_sub1},
 Figure~\ref{fig:interjobstudy} shows the results of each application 
 data transfer time with different allocation unit size. 
 
+\begin{figure*}[t]
+    \centering
+%    \begin{subfigure}[t]{0.22\textwidth}
+%        \centering
+%        \includegraphics[height=1.2in]{figs/allocshape/allocation}
+%        \caption{ }
+%        \label{fig:cont_sub1}
+%    \end{subfigure}%
+%    \hspace{1em}%
+    \begin{subfigure}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[height=1.8in]{figs/allocshape/unitsize/unit16}
+        \caption{ }
+        \label{fig:noncont_sub1}
+    \end{subfigure}%
+    \hspace{1em}%
+    \begin{subfigure}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[height=1.8in]{figs/allocshape/unitsize/unit8}
+        \caption{ }
+        \label{fig:noncont_sub2}
+    \end{subfigure}%
+    \hspace{1em}%
+    \begin{subfigure}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[height=1.8in]{figs/allocshape/unitsize/unit2}
+        \caption{ }
+        \label{fig:noncont_sub3}
+    \end{subfigure}%
+    \caption{
+%    (a) Contiguous allocation in three different shapes. 
+%    ``Blue" is a 2D mesh, ``Green" is a 3D-unbalanced cube and ``Red" is a 3D-balanced cube. 
+    Non-contiguous allocation. Each job is represented by a specific color. 
+    The nodes assigned to different jobs are interleaved, 
+    the size of allocation unit are 16, 8 and 2.
+    }
+    \label{fig:alloc-shapes}
+\end{figure*}
+
+
 The data transfer time of AMG in Figure~\ref{fig:interjob-amg} keeps stable 
 between allocation unit size of 16 and 8 because of the 
 nearest neighbor pattern of AMG. 
@@ -274,24 +294,24 @@ will alleviate such interference and improve job performance.
 
 
 
-\begin{figure*}[t!]
+\begin{figure*}[t]
     \centering
     \begin{subfigure}[t]{0.32\textwidth}
         \centering
-        \includegraphics[height=1.5in]{figs/inter-job/amg}
+        \includegraphics[height=1.8in]{figs/inter-job/amg}
         \caption{AMG}
         \label{fig:interjob-amg}
     \end{subfigure}%
     \hspace{1em}%
     \begin{subfigure}[t]{0.32\textwidth}
         \centering
-        \includegraphics[height=1.5in]{figs/inter-job/cr}
+        \includegraphics[height=1.8in]{figs/inter-job/cr}
         \caption{CrystalRouter}
         \label{fig:interjob-cr}
     \end{subfigure}%
     \begin{subfigure}[t]{0.32\textwidth}
         \centering
-        \includegraphics[height=1.5in]{figs/inter-job/mg}
+        \includegraphics[height=1.8in]{figs/inter-job/mg}
         \caption{MultiGrid}
         \label{fig:interjob-mg}
     \end{subfigure}%
@@ -323,12 +343,12 @@ Based on our simulation study, we can make following observations:
     better performance with more compact allocations (e.g, 3D balanced).
     
     \item A good rank-to-node mapping strategy can greatly improve 
-    an application's performance when a specific allocation is given.
+    an application performance when a specific allocation is given.
     
     \item An optimal size for allocation units should be determined 
     according to an application's dominant communication pattern. 
     In general, a unit size should be large enough to accommodate  
-    neighboring communication of the application. 
+    neighboring communication in the application. 
     
     \item Inter-job interference is inevitable in non-contiguous allocation. 
     However, choosing the proper allocation unit size with communication 
