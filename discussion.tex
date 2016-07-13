@@ -2,53 +2,47 @@
 \section{Discussion}
 \label{sec:discussion}
 
-The results shown in the previous section provide insights 
-for the design of smart and flexible job placement policy. 
-By scrutinizing job's communication behavior, 
-we can identify job's dominant communication pattern 
-and pinpoint the ``neighborhood communication". 
-With such knowledge about jobs' communication patterns, 
+The results shown in the previous sections provide insights 
+for the design of a smart and flexible job placement policy. 
+By scrutinizing the communication behavior of jobs, 
+we can identify their dominant communication patterns 
+and pinpoint locality needs. 
+With such knowledge about communication patterns, 
 we can analyze the possible interference between jobs and 
-take precautions to alleviate the negative effect when making placement decisions. 
+take precautions to alleviate interference when making placement decisions. 
 
-When an application with dominant communication that is intensive many-to-many, 
-the scheduler should provide it with compact node allocation and exclusive network provision. 
-The compact allocation can guarantee the shortest pair-wise distance between all the ranks, 
-and make the data transfer between ranks take less hops. 
-On the other hand, 
-the exclusive network provision will prevent other adjacent applications from sharing network resources, 
-thus eliminate the performance degradation due to interference.
+When an application with intensive many-to-many communication is submitted to the system, 
+the scheduler should provide it with compact node allocation and exclusive network resources. 
+Compact allocation can guarantee the shortest pair-wise distance between all the ranks. 
+Additionally, the exclusive network provision will prevent other jobs from sharing network resources, 
+thus eliminating the performance degradation due to interference.
 
-Not every application's preferable resource are compact allocation 
-and exclusive network provision. 
+Not every application requires compact allocation and exclusive network provisioning. 
 As we demonstrate in our study, 
 applications whose dominant communication pattern contains intensive 
-``neighborhood communication" like nearest Neighbor do not benefit 
+``neighborhood communication" like nearest neighbor may not benefit 
 from compact allocation and exclusive network provision. 
 Applications, such as AMG, can run with non-contiguous node 
-allocation without performance degradation, 
-as long as the allocation unit can accommodate their ``neighborhood communication".
+allocation without significant performance degradation, 
+as long as the allocation unit can accommodate their rank-rank locality.
 
 The size of allocation unit shouldn't be fixed. 
 Instead, the scheduler should choose a proper unit size 
-based on the scale of ``neighborhood communication" of each job. 
-The best unit size should be neither too big nor too small, 
-just perfectly fit for the scale of that ``neighborhood". 
-Big unit size can not be fully utilized and thus cause fragmentation. 
-Small unit size will not be able to accommodate the ``neighborhood communication", 
-making the intra-job communication less efficient. 
+based on the granularity of communication locality of each job.   
+Large unit sizes can not be fully utilized and thus cause fragmentation. 
+Small unit sizes will not be able to accommodate the communication locality, 
+resulting in less efficient intra-job communication.
 
 
-The advantage of making job placement with consideration about job's communication pattern is obvious. 
-First, compared with contiguous allocation policy, 
-the new scheduler with job's communication pattern awareness can be more flexible, 
-without requiring the system to provide a big contiguous partition to accommodate the whole application, 
-it only needs to provide a small set of compact nodes that is 
-sufficient for all the "local community" in the application. 
-On the other hand, 
-the new scheduler is able to preserve the locality of application's communication pattern. 
-Indeed, the small compact node set (allocation unit) provided for the application's 
-``local communities" can preserve the communication locality in the maximum extent. 
+The advantage of performing job placement with consideration 
+of job communication patterns is straightforward,
+given our experimental analyses. 
+Compared with contiguous placement policy, 
+schedulers with communication pattern awareness can be more flexible, 
+relaxing the need to provide contiguous partitions to accommodate the whole application,
+avoiding fragmentation issues inherent in contiguous placement.
+Indeed, smaller compact node sets (allocation units) provided for application's
+``local communication" can help preserve the communication performance to a sufficient extent. 
 The design of such a new scheduler with job communication pattern awareness 
 is part of our future work. 
 
