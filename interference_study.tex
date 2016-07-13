@@ -2,18 +2,20 @@
 \label{sec:interference}
 
 \textbf{\emph{Intra-job interference}} refers to the network 
-contention between ranks within each application. 
+contention between the ranks within each application. 
 \textbf{\emph{Inter-job interference}} is introduced by concurrently 
-running jobs that adjacent to each other sharing network resources. 
+running jobs share network resources. 
 Communication variability due to such interference can 
 cause application performance degradation.
 
 In this section we will study both kinds of interference 
 in the context of a torus network. 
-Since application's communication pattern won't change with its scale, 
-we use AMG with 216 ranks, CrystalRouter with 100 ranks, and MultiGrid 125 ranks. 
-And in order to accommodate three applications running concurrently with different allocations, 
-we simulate a 2K-node 3D torus ($16^{2} \times 8$) network for the experiments.
+Since the applications communication patterns do not change with the scale,
+\TODO{we perform our experiments with comparatively (to leadership scale) small scale,
+something a 2048 rank cluster to simplify analysis.  }
+%we use AMG with 216 ranks, CrystalRouter with 100 ranks, and MultiGrid 125 ranks. 
+%And in order to accommodate three applications running concurrently with different allocations, 
+%we simulate a 2K-node 3D torus ($16^{2} \times 8$) network for the experiments.
 
 
 \subsection{Intra-Job Interference Analysis}
@@ -21,17 +23,21 @@ we simulate a 2K-node 3D torus ($16^{2} \times 8$) network for the experiments.
 
 We design two sets of experiments to study the 
 intra-job interference of each application. 
-In the first, shown in Figure \ref{fig:shapestudy}, 
+In the first, 
 we assign each application with allocations in \emph{three different shapes}. 
-In the second, shown in Figure \ref{fig:diffmap}, 
+In the second, 
 we study the intra-job interference by using different 
-mapping strategies for each application with given allocation shape. 
+mapping strategies for each application with a given allocation shape. 
+
+
+
+\subsubsection{Allocation Shape Study}
 
 In the allocation shapes experiment, 
 we select three possible shapes commonly seen on the 3D torus network. 
 They are 3D balanced-cube, 3D unbalanced-cube and 2D mesh, 
 as shown in Figure \ref{fig:cont_sub1}.
-3D balanced-cube, shown as red in Figure \ref{fig:cont_sub1}, 
+3D balanced-cube, shown in red in Figure \ref{fig:cont_sub1}, 
 can guarantee the minimum \emph{average pair-wise distance} within the allocation. 
 Some research studies~\cite{leung,abhinav-sc13} indicate that 
 compact allocation can guarantee jobs with better performance. 
@@ -39,30 +45,29 @@ They use a variety of metrics to evaluate the compactness of the allocation,
 such as \emph{average pair-wise distance}, \emph{diameter} and \emph{contiguity}. 
 In this work, we select 3D balanced-cube as the most compact allocation on a 3D torus network.
 
-3D unbalanced-cube, shown in green color in Figure \ref{fig:cont_sub1}, 
+3D unbalanced-cube, shown in green in Figure~\ref{fig:cont_sub1}, 
 is a rectangular prism, which is a possible allocation shape 
 on the systems with asymmetric networks. 
 For example, Cray XE6/XK7 systems are deployed 3D tori with Gemini routers. 
 The network connections in the \emph{y}-direction have 
 only half the bandwidth of the cables used in the \emph{x} and \emph{z} directions. 
 In order to take advantage of the faster links in the \emph{x} and \emph{z} directions, 
-job allocation starts from X-Z plane, 
-which leads to a rectangular prism shaped allocation~\cite{RF}.
+job allocation favors the X-Z plane~\cite{RF}. Our torus network in this study is symmetric.
 
-2D mesh, shown as blue in Figure \ref{fig:cont_sub1}, 
+2D mesh, shown in blue in Figure \ref{fig:cont_sub1}, 
 can be cut out from a single layer of the 3D torus. 
-2D mesh is a very common allocation shape on the torus network 
+2D mesh is a common allocation shape on the torus network 
 for both contiguous and non-contiguous placement policies. 
-For example, Cray Application Level Placement Scheduler (ALPS) indexes 
-all compute nodes in a torus network into a list and 
-makes job allocation by simply going through that list~\cite{carl-cug}. 
+For example, Cray's Application Level Placement Scheduler (ALPS) indexes 
+all compute nodes in the torus into a list and 
+allocates by simply going through that list~\cite{carl-cug}. 
 When the list is obtained by sorting the nodes based on 
 their spacial coordinates in the torus, 
-allocation made off from this list will be 2D mesh. 
+the resulting allocations form 2D meshes. 
 The IBM Blue/Gene Q supercomputer Mira at Argonne Leadership Computing Facility 
-also allow its allocation partition configured into mesh~\cite{zhou-ipdps}. 
+also allows its allocation partition to be configured as a mesh~\cite{zhou-ipdps}. 
 
-\begin{figure*}[t!]
+\begin{figure*}[htp]
     \centering
     \begin{subfigure}[t]{0.22\textwidth}
         \centering
@@ -101,33 +106,20 @@ also allow its allocation partition configured into mesh~\cite{zhou-ipdps}.
     \label{fig:alloc-shapes}
 \end{figure*}
 
-
-AMG with 3D nearest neighbor communication pattern takes less time 
-when being assigned with 3D-unbalanced allocation than 3D-balanced, 
-as shown in Figure~\ref{fig:shapstudy-amg}. 
-And MultiGrid gets the best performance (shortest data transfer time) 
+Figure~\ref{fig:shapstudy-amg} shows 
+AMG with 3D nearest neighbor communication pattern takes slightly less time 
+when being assigned with 3D-unbalanced allocation than 3D-balanced. 
+And MultiGrid performs best (shortest data transfer time) 
 when running on 3D-balanced allocation, as shown in Figure~\ref{fig:shapstudy-mg}. 
 Since MultiGrid's communication pattern is many-to-many dominant, 
 3D-balanced is the most compact allocation with shortest pair-wise distance between nodes, 
 which can reduce the aggregated hops for transferring message among ranks in MultiGrid. 
-Since CrystalRouter has both dominant local communication and multi-stage global data transfer, 
+Since CrystalRouter exibits both local and global rank-to-rank data transfers, 
 the 3D-balance is also the best allocation, but its advantage over 3D-unbalanced is not 
 that obvious as to MultiGrid, as shown in Figure~\ref{fig:shapstudy-cr}.
 
-Lots of research studies have designed complex placement algorithms 
-to provide applications with the most compact allocation~\cite{leung,LO}. 
-However, as shown in our experiments, providing cubic allocation without 
-considering application's communication pattern can not guarantee 
-the best performance for every application. 
-Compact allocation should be provided to applications with intensive global data transfer, 
-such as those conforms to many-to-many communication pattern. 
-Applications with dominant communication pattern like nearest neighbor 
-can not fully utilize the compact allocation and 
-may get even better performance on a relaxed allocation shape. 
 
-
-
-\begin{figure*}[t!]
+\begin{figure*}[htp]
     \centering
     \begin{subfigure}[t]{0.32\textwidth}
         \centering
@@ -155,7 +147,20 @@ may get even better performance on a relaxed allocation shape.
    \label{fig:shapestudy}
 \end{figure*}
 
+A number of studies have designed complex placement algorithms 
+to provide applications with the most compact allocation~\cite{leung,LO}. 
+However, as shown in our experiments, providing cubic allocation without 
+considering application's communication pattern may not guarantee 
+the best performance for every application. 
+Compact allocation should be provided to applications with intensive global data transfer, 
+such as those exhibiting a many-to-many pattern. 
 
+
+
+
+
+
+\subsubsection{Mapping Strategy Study}
 The rank-to-node mapping of parallel applications on HPC systems 
 could greatly impact applications' performance. 
 However, finding the optimal mapping solution for a given 
@@ -166,31 +171,31 @@ intra-job interference of application with specific communication pattern.
 We provide AMG, CrystalRouter and MultiGrid with 3D-balance allocation and 
 use three mapping strategies to do the rank-to-node mapping. 
 The ``Linear" mapping, as we used in the previous experiments, 
-is to map each rank according to the dimensional ordering of compute nodes. 
+maps each rank according to the dimensional ordering of compute nodes. 
 The ``Cube" mapping assigns ranks into consecutive $2^{3}$ cubes. 
 The ``Random" mapping assigns ranks randomly within the allocation. 
 
-AMG remains roughly the same when it been mapped by ``Linear" and ``Cube", 
+AMG \TODO{remains} roughly the same when it been mapped by ``Linear" and ``Cube", 
 shown in Figure~\ref{fig:diffmap-amg}. 
 Although ``Linear" and ``Cube" mapping strategies cause some routing overlap for AMG's communication, 
 both mapping strategies still preserve the locality of AMG's 3D nearest neighbor communication pattern. 
-The ``Random" mapping totally destroys AMG's communication pattern, 
-and results in intra-job interference among all the ranks in AMG. 
+The ``Random" mapping disrupts AMG's communication pattern, 
+and results in intra-job interference among the ranks. 
 The performance degradation caused by using ``Random" mapping is up to 90\%.
 
 The ``Cube" mapping improves CrystalRouter's performance over the ``Linear" 
-by reducing the pair-wise distance between ranks, shown in Figure~\ref{fig:diffmap-cr}. 
-The global data transfer in CrystalRouter will takes fewer hops with ``Cube" mapping. 
-The ``Random" mapping scatters the ranks within the local neighborhood 
+by up to 10\% on average, shown in Figure~\ref{fig:diffmap-cr}. 
+This is due to the global data transfer in CrystalRouter takes fewer hops with ``Cube" mapping. 
+The ``Random" mapping for CrystalRouter results in poor locality across all ranks on average. 
 of CrystalRouter and make their communication less efficient. 
 The ``Cube" mapping benefits MultiGrid's many-to-many communication. 
-However, due to the small amount of data transfer among ranks in MultiGrid, 
+However, due to the small amount of data transfered among ranks in MultiGrid, 
 ``Cube" mapping fails to exhibit a drastic advantage. 
-``Random" mapping neither cause too much degradation for the same reason, 
+``Random" mapping causes little degradation for the same reason, 
 shown in Figure~\ref{fig:diffmap-mg}.
 
 
-\begin{figure*}[t!]
+\begin{figure*}[htp]
     \centering
     \begin{subfigure}[t]{0.32\textwidth}
         \centering
@@ -226,47 +231,45 @@ shown in Figure~\ref{fig:diffmap-mg}.
 
 Inter-job interference has been identified as one of the major culprits 
 for application's performance variability~\cite{abhinav-sc13,skinner}. 
-Inter-job interference is a more prominent issue for system adopted 
-non-contiguous placement policy than systems with contiguous policy. 
-Applications communication time have been demonstrated to 
-vary from 36\% faster to 69\% slower due to job interference 
+Inter-job interference is a more prominent issue for systems adopting 
+non-contiguous placement policies than systems with contiguous policy. 
+Application communication times have been demonstrated to 
+vary from 36\% shorter to 69\% longer due to job interference 
 when they are running concurrently with non-contiguous allocations~\cite{abhinav-sc13}.
 
-We assign each application with non-contiguous allocation and 
+We allocate each application with non-contiguous policy and 
 run them concurrently on the same network. 
-The allocation unit belongs to different jobs are interleaved. 
-In order to study the impact of different allocation unit size on 
+The compute nodes belonging to different jobs are interleaved. 
+In order to study the impact of different allocation unit sizes on 
 applications' inter-job interference, 
 we conduct experiments with unit size of 16, 8 and 2, 
 shown respectively in Figure~\ref{fig:noncont_sub1}, 
-~\ref{fig:noncont_sub1} and~\ref{fig:noncont_sub3}. 
+~\ref{fig:noncont_sub2} and~\ref{fig:noncont_sub3}. 
 Figure~\ref{fig:interjobstudy} shows the results of each application 
 data transfer time with different allocation unit size. 
 
 The data transfer time of AMG in Figure~\ref{fig:interjob-amg} keeps stable 
-between allocation unit size of 16 and 8, since the locality of AMG is 6-rank based. 
-When the unit size reduce to 2, AMG suffers prolong data transfer time by about 10\%. 
+between allocation unit size of 16 and 8 because of the 
+nearest neighbor pattern of AMG. 
+When the unit size is reduced to 2, AMG suffers prolong data transfer time by about 10\% on average. 
 CrystalRouter is more sensitive to allocation unit size. 
-The best unit size would be the one big enough to accommodate its local neighborhood. 
 Figure~\ref{fig:interjob-cr} shows that unit size of 16 and 8 can guarantee 
 the same average data transfer time, 
-while some rank spend more time with allocation unit size 8 than 16. 
-When the unit size reduce to 2, the communication become less efficiency 
-and takes about 15\% more time for transferring data. 
+while some ranks spend more time with allocation unit size 8 than 16. 
+When the unit size is reduced to 2, the communication becomes less efficient 
+and takes about 15\% more time on average for transferring data. 
 
 The data transfer time of MultiGrid with different allocation unit sizes 
 doesn't show obvious variability in Figure~\ref{fig:interjob-mg}. 
 This is because even big allocation unit size like 16 will still fail to preserve MultiGrid's many-to-many pattern. 
 The data transfer time is almost doubled when MultiGrid running concurrently with allocation unit size of 16, 
 as shown in Figure~\ref{fig:interjob-mg}. 
-As the unit size decreases, the data transfer time keep growing, 
-but in a slow way, which means in terms of preserving the locality of MultiGrid, 
-allocation unit of size 16, 8 and 2 serve equally bad.
+Further unit size decreases result in roughly similar average communication times though.
 
 Choosing the proper unit size in non-contiguous placement policy should 
-also consider application's communication pattern. 
+consider application's communication patterns. 
 Inter-job interference is inevitable in non-contiguous based systems, 
-but unit size that big enough to preserve the neighborhood communication of the application 
+but unit sizes big enough to preserve the neighborhood communication of the application 
 will alleviate such interference and improve job performance. 
 
 
@@ -305,19 +308,22 @@ will alleviate such interference and improve job performance.
 \subsection{Result Summary}
 \label{sec:summary}
 
-Based on the above comprehensive study, we can make following observations:
+Based on our simulation study, we can make following observations:
 
 \begin{itemize}
 
-    \item The compact allocation may not guarantee the best performance for every application. 
+    \item Compact allocation may not be necessary for every application. 
     
-    \item The applications dominated with nearest neighbor communications exhibit 
-    relatively stable performance under different allocation shapes, 
-    while the applications dominated with many-to-many communication exhibit 
-    better performance with compact allocation (e.g, 3D balanced).
+    \item The applications dominated by nearest neighbor communications exhibit 
+    relatively stable performance under different allocation shapes as long as
+    the allocation exhibit some degree of locality.
+    
+     
+    \item The applications dominated with many-to-many communication exhibit 
+    better performance with more compact allocations (e.g, 3D balanced).
     
     \item A good rank-to-node mapping strategy can greatly improve 
-    application's performance when specific allocation is given.
+    an application's performance when a specific allocation is given.
     
     \item An optimal size for allocation units should be determined 
     according to an application's dominant communication pattern. 
@@ -325,8 +331,8 @@ Based on the above comprehensive study, we can make following observations:
     neighboring communication of the application. 
     
     \item Inter-job interference is inevitable in non-contiguous allocation. 
-    However, choosing the proper allocation unit size with job's communication 
-    pattern awareness can alleviate such negative effect. 
+    However, choosing the proper allocation unit size with communication 
+    pattern awareness can help alleviate the resulting negative effects. 
     
 \end{itemize}
 
